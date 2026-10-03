@@ -47,7 +47,7 @@ function Books() {
 
   async function add() {
     const ids = parseStickers(stickers);
-    if (!title.trim() || !ids.length) return toast.error("Title and at least one sticker ID required");
+    if (!title.trim() || !ids.length) { toast.error("Title and at least one sticker ID required"); return; }
     const r = await rpc("add_book_with_copies", { p_title: title.trim(), p_author: author.trim(), p_sticker_ids: ids });
     if (r) {
       toast.success(`Added ${ids.length} copies`);

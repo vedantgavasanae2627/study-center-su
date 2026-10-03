@@ -40,9 +40,9 @@ function Centers() {
   });
 
   async function add() {
-    if (!name.trim() || !loc.trim()) return toast.error("Enter name and location");
+    if (!name.trim() || !loc.trim()) { toast.error("Enter name and location"); return; }
     const { error } = await db.from("study_centers").insert({ center_name: name.trim(), location: loc.trim() });
-    if (error) return toast.error(error.message);
+    if (error) { toast.error(error.message); return; }
     toast.success("Center added");
     setName(""); setLoc("");
     void qc.invalidateQueries({ queryKey: ["centers"] });
@@ -51,7 +51,7 @@ function Centers() {
   async function remove(id: string) {
     if (!confirm("Delete this center? Only possible if it has no students.")) return;
     const { error } = await db.from("study_centers").delete().eq("id", id);
-    if (error) return toast.error("Can't delete: center still has students or history");
+    if (error) { toast.error("Can't delete: center still has students or history"); return; }
     toast.success("Center deleted");
     void qc.invalidateQueries({ queryKey: ["centers"] });
   }

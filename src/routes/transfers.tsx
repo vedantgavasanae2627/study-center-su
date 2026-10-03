@@ -72,7 +72,7 @@ function Transfers() {
   });
 
   async function send() {
-    if (!bookId || !to || !picked.length) return toast.error("Choose book, destination and copies");
+    if (!bookId || !to || !picked.length) { toast.error("Choose book, destination and copies"); return; }
     const r =
       mode === "RESTOCK"
         ? await rpc("restock_with_stickers", { p_book_id: bookId, p_to_center_id: to, p_sticker_ids: picked })
