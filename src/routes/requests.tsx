@@ -31,7 +31,7 @@ function Requests() {
   const refresh = () => void qc.invalidateQueries({ queryKey: ["requests"] });
 
   async function send() {
-    if (!bookId) return toast.error("Choose a book");
+    if (!bookId) { toast.error("Choose a book"); return; }
     if (await rpc("create_book_request", { p_book_id: bookId, p_quantity: Number(qty) })) {
       toast.success("Request sent to the university");
       setBookId(""); setQty("1");

@@ -73,7 +73,7 @@ const tones: Record<string, string> = {
 };
 
 export function Tag({ tone = "gray", children }: { tone?: keyof typeof tones | string; children: ReactNode }) {
-  return <span className={cn("inline-block rounded-full px-2 py-0.5 text-xs font-medium", tones[tone] ?? tones.gray)}>{children}</span>;
+  return <span className={cn("inline-block rounded-full px-2 py-0.5 text-xs font-medium", tones[tone] ?? tones["gray"])}>{children}</span>;
 }
 
 export function Empty({ children }: { children: ReactNode }) {

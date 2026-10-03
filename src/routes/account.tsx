@@ -22,10 +22,10 @@ function Account() {
   const [pw2, setPw2] = useState("");
 
   async function change() {
-    if (pw.length < 8) return toast.error("Use at least 8 characters");
-    if (pw !== pw2) return toast.error("Passwords don't match");
+    if (pw.length < 8) { toast.error("Use at least 8 characters"); return; }
+    if (pw !== pw2) { toast.error("Passwords don't match"); return; }
     const { error } = await supabase.auth.updateUser({ password: pw });
-    if (error) return toast.error(error.message);
+    if (error) { toast.error(error.message); return; }
     toast.success("Password changed");
     setPw(""); setPw2("");
   }

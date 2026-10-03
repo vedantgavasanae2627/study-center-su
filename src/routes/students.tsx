@@ -43,7 +43,7 @@ function Students() {
   });
 
   async function add() {
-    if (!f.prn || !f.full_name) return toast.error("PRN and name are required");
+    if (!f.prn || !f.full_name) { toast.error("PRN and name are required"); return; }
     const id = await rpc("add_student", {
       p_prn: f.prn, p_full_name: f.full_name, p_enrollment_year: Number(f.enrollment_year), p_course: f.course,
       p_year_of_study: Number(f.year_of_study), p_college_name: f.college_name, p_branch: f.branch || f.course,

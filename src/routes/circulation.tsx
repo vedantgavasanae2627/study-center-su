@@ -62,7 +62,7 @@ function Circulation() {
   };
 
   async function issue() {
-    if (!studentId || !bookId || !copyId) return toast.error("Choose student, book and copy");
+    if (!studentId || !bookId || !copyId) { toast.error("Choose student, book and copy"); return; }
     if (await rpc("issue_book", { p_student_id: studentId, p_book_id: bookId, p_center_id: centerId, p_copy_id: copyId })) {
       toast.success("Book issued for 14 days");
       setBookId(""); setCopyId("");

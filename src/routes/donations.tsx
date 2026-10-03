@@ -30,14 +30,14 @@ function Donations() {
   const set = (k: keyof typeof blank) => (e: any) => setF({ ...f, [k]: e.target.value });
 
   async function add() {
-    if (!f.book_name || !f.sticker_id) return toast.error("Book name and sticker ID required");
+    if (!f.book_name || !f.sticker_id) { toast.error("Book name and sticker ID required"); return; }
     let student_id = null;
     if (f.prn) {
       const { data } = await db.from("students").select("id").eq("prn", f.prn).maybeSingle();
       student_id = data?.id ?? null;
     }
     const { error } = await db.from("book_donations").insert({ ...f, center_id: centerId, student_id });
-    if (error) return toast.error(error.message);
+    if (error) { toast.error(error.message); return; }
     toast.success("Donation recorded");
     setF(blank);
     void qc.invalidateQueries({ queryKey: ["donations"] });
