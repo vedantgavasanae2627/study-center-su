@@ -544,6 +544,46 @@ export type Database = {
       [_ in never]: never
     }
     Functions: {
+      accept_transfer: { Args: { p_transfer_id: string }; Returns: undefined }
+      add_book_with_copies: {
+        Args: { p_author: string; p_sticker_ids: string[]; p_title: string }
+        Returns: string
+      }
+      add_donation_to_catalog: {
+        Args: { p_donation_id: string }
+        Returns: undefined
+      }
+      add_student: {
+        Args: {
+          p_branch: string
+          p_center_id: string
+          p_college_name: string
+          p_course: string
+          p_email: string
+          p_enrollment_year: number
+          p_full_name: string
+          p_phone: string
+          p_prn: string
+          p_semester: number
+          p_year_of_study: number
+        }
+        Returns: string
+      }
+      course_to_code: { Args: { p_course: string }; Returns: number }
+      create_book_request: {
+        Args: { p_book_id: string; p_quantity: number }
+        Returns: string
+      }
+      create_relocation: {
+        Args: {
+          p_book_id: string
+          p_from_center_id: string
+          p_sticker_ids: string[]
+          p_to_center_id: string
+        }
+        Returns: string
+      }
+      delete_all_book_requests: { Args: never; Returns: number }
       has_role: {
         Args: {
           _role: Database["public"]["Enums"]["app_role"]
@@ -553,8 +593,31 @@ export type Database = {
       }
       is_admin: { Args: { _user_id: string }; Returns: boolean }
       is_staff: { Args: { _user_id: string }; Returns: boolean }
+      issue_book: {
+        Args: {
+          p_book_id: string
+          p_center_id: string
+          p_copy_id: string
+          p_student_id: string
+        }
+        Returns: string
+      }
       my_center_id: { Args: { _user_id: string }; Returns: string }
       my_student_id: { Args: { _user_id: string }; Returns: string }
+      renew_book: { Args: { p_transaction_id: string }; Returns: string }
+      respond_to_book_request: {
+        Args: { p_remarks: string; p_request_id: string; p_status: string }
+        Returns: undefined
+      }
+      restock_with_stickers: {
+        Args: {
+          p_book_id: string
+          p_sticker_ids: string[]
+          p_to_center_id: string
+        }
+        Returns: string
+      }
+      return_book: { Args: { p_transaction_id: string }; Returns: number }
     }
     Enums: {
       app_role: "MAIN_ADMIN" | "SUB_ADMIN" | "STUDY_CENTER" | "STUDENT"
