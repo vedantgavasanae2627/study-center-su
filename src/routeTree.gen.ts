@@ -10,12 +10,28 @@
 
 import { Route as rootRouteImport } from './routes/__root'
 import { Route as IndexRouteImport } from './routes/index'
+import { Route as AccountRouteImport } from './routes/account'
 import { Route as AuthRouteImport } from './routes/auth'
+import { Route as BooksRouteImport } from './routes/books'
+import { Route as CentersRouteImport } from './routes/centers'
+import { Route as CirculationRouteImport } from './routes/circulation'
 import { Route as DashboardRouteImport } from './routes/dashboard'
+import { Route as DonationsRouteImport } from './routes/donations'
+import { Route as InventoryRouteImport } from './routes/inventory'
+import { Route as MyBooksRouteImport } from './routes/my-books'
+import { Route as RequestsRouteImport } from './routes/requests'
+import { Route as StaffRouteImport } from './routes/staff'
+import { Route as StudentsRouteImport } from './routes/students'
+import { Route as TransfersRouteImport } from './routes/transfers'
 
 const IndexRoute = IndexRouteImport.update({
   id: '/',
   path: '/',
+  getParentRoute: () => rootRouteImport,
+} as any)
+const AccountRoute = AccountRouteImport.update({
+  id: '/account',
+  path: '/account',
   getParentRoute: () => rootRouteImport,
 } as any)
 const AuthRoute = AuthRouteImport.update({
@@ -23,40 +39,177 @@ const AuthRoute = AuthRouteImport.update({
   path: '/auth',
   getParentRoute: () => rootRouteImport,
 } as any)
+const BooksRoute = BooksRouteImport.update({
+  id: '/books',
+  path: '/books',
+  getParentRoute: () => rootRouteImport,
+} as any)
+const CentersRoute = CentersRouteImport.update({
+  id: '/centers',
+  path: '/centers',
+  getParentRoute: () => rootRouteImport,
+} as any)
+const CirculationRoute = CirculationRouteImport.update({
+  id: '/circulation',
+  path: '/circulation',
+  getParentRoute: () => rootRouteImport,
+} as any)
 const DashboardRoute = DashboardRouteImport.update({
   id: '/dashboard',
   path: '/dashboard',
   getParentRoute: () => rootRouteImport,
 } as any)
+const DonationsRoute = DonationsRouteImport.update({
+  id: '/donations',
+  path: '/donations',
+  getParentRoute: () => rootRouteImport,
+} as any)
+const InventoryRoute = InventoryRouteImport.update({
+  id: '/inventory',
+  path: '/inventory',
+  getParentRoute: () => rootRouteImport,
+} as any)
+const MyBooksRoute = MyBooksRouteImport.update({
+  id: '/my-books',
+  path: '/my-books',
+  getParentRoute: () => rootRouteImport,
+} as any)
+const RequestsRoute = RequestsRouteImport.update({
+  id: '/requests',
+  path: '/requests',
+  getParentRoute: () => rootRouteImport,
+} as any)
+const StaffRoute = StaffRouteImport.update({
+  id: '/staff',
+  path: '/staff',
+  getParentRoute: () => rootRouteImport,
+} as any)
+const StudentsRoute = StudentsRouteImport.update({
+  id: '/students',
+  path: '/students',
+  getParentRoute: () => rootRouteImport,
+} as any)
+const TransfersRoute = TransfersRouteImport.update({
+  id: '/transfers',
+  path: '/transfers',
+  getParentRoute: () => rootRouteImport,
+} as any)
 
 export interface FileRoutesByFullPath {
   '/': typeof IndexRoute
+  '/account': typeof AccountRoute
   '/auth': typeof AuthRoute
+  '/books': typeof BooksRoute
+  '/centers': typeof CentersRoute
+  '/circulation': typeof CirculationRoute
   '/dashboard': typeof DashboardRoute
+  '/donations': typeof DonationsRoute
+  '/inventory': typeof InventoryRoute
+  '/my-books': typeof MyBooksRoute
+  '/requests': typeof RequestsRoute
+  '/staff': typeof StaffRoute
+  '/students': typeof StudentsRoute
+  '/transfers': typeof TransfersRoute
 }
 export interface FileRoutesByTo {
   '/': typeof IndexRoute
+  '/account': typeof AccountRoute
   '/auth': typeof AuthRoute
+  '/books': typeof BooksRoute
+  '/centers': typeof CentersRoute
+  '/circulation': typeof CirculationRoute
   '/dashboard': typeof DashboardRoute
+  '/donations': typeof DonationsRoute
+  '/inventory': typeof InventoryRoute
+  '/my-books': typeof MyBooksRoute
+  '/requests': typeof RequestsRoute
+  '/staff': typeof StaffRoute
+  '/students': typeof StudentsRoute
+  '/transfers': typeof TransfersRoute
 }
 export interface FileRoutesById {
   __root__: typeof rootRouteImport
   '/': typeof IndexRoute
+  '/account': typeof AccountRoute
   '/auth': typeof AuthRoute
+  '/books': typeof BooksRoute
+  '/centers': typeof CentersRoute
+  '/circulation': typeof CirculationRoute
   '/dashboard': typeof DashboardRoute
+  '/donations': typeof DonationsRoute
+  '/inventory': typeof InventoryRoute
+  '/my-books': typeof MyBooksRoute
+  '/requests': typeof RequestsRoute
+  '/staff': typeof StaffRoute
+  '/students': typeof StudentsRoute
+  '/transfers': typeof TransfersRoute
 }
 export interface FileRouteTypes {
   fileRoutesByFullPath: FileRoutesByFullPath
-  fullPaths: '/' | '/auth' | '/dashboard'
+  fullPaths:
+    | '/'
+    | '/account'
+    | '/auth'
+    | '/books'
+    | '/centers'
+    | '/circulation'
+    | '/dashboard'
+    | '/donations'
+    | '/inventory'
+    | '/my-books'
+    | '/requests'
+    | '/staff'
+    | '/students'
+    | '/transfers'
   fileRoutesByTo: FileRoutesByTo
-  to: '/' | '/auth' | '/dashboard'
-  id: '__root__' | '/' | '/auth' | '/dashboard'
+  to:
+    | '/'
+    | '/account'
+    | '/auth'
+    | '/books'
+    | '/centers'
+    | '/circulation'
+    | '/dashboard'
+    | '/donations'
+    | '/inventory'
+    | '/my-books'
+    | '/requests'
+    | '/staff'
+    | '/students'
+    | '/transfers'
+  id:
+    | '__root__'
+    | '/'
+    | '/account'
+    | '/auth'
+    | '/books'
+    | '/centers'
+    | '/circulation'
+    | '/dashboard'
+    | '/donations'
+    | '/inventory'
+    | '/my-books'
+    | '/requests'
+    | '/staff'
+    | '/students'
+    | '/transfers'
   fileRoutesById: FileRoutesById
 }
 export interface RootRouteChildren {
   IndexRoute: typeof IndexRoute
+  AccountRoute: typeof AccountRoute
   AuthRoute: typeof AuthRoute
+  BooksRoute: typeof BooksRoute
+  CentersRoute: typeof CentersRoute
+  CirculationRoute: typeof CirculationRoute
   DashboardRoute: typeof DashboardRoute
+  DonationsRoute: typeof DonationsRoute
+  InventoryRoute: typeof InventoryRoute
+  MyBooksRoute: typeof MyBooksRoute
+  RequestsRoute: typeof RequestsRoute
+  StaffRoute: typeof StaffRoute
+  StudentsRoute: typeof StudentsRoute
+  TransfersRoute: typeof TransfersRoute
 }
 
 declare module '@tanstack/react-router' {
@@ -68,11 +221,39 @@ declare module '@tanstack/react-router' {
       preLoaderRoute: typeof IndexRouteImport
       parentRoute: typeof rootRouteImport
     }
+    '/account': {
+      id: '/account'
+      path: '/account'
+      fullPath: '/account'
+      preLoaderRoute: typeof AccountRouteImport
+      parentRoute: typeof rootRouteImport
+    }
     '/auth': {
       id: '/auth'
       path: '/auth'
       fullPath: '/auth'
       preLoaderRoute: typeof AuthRouteImport
+      parentRoute: typeof rootRouteImport
+    }
+    '/books': {
+      id: '/books'
+      path: '/books'
+      fullPath: '/books'
+      preLoaderRoute: typeof BooksRouteImport
+      parentRoute: typeof rootRouteImport
+    }
+    '/centers': {
+      id: '/centers'
+      path: '/centers'
+      fullPath: '/centers'
+      preLoaderRoute: typeof CentersRouteImport
+      parentRoute: typeof rootRouteImport
+    }
+    '/circulation': {
+      id: '/circulation'
+      path: '/circulation'
+      fullPath: '/circulation'
+      preLoaderRoute: typeof CirculationRouteImport
       parentRoute: typeof rootRouteImport
     }
     '/dashboard': {
@@ -82,13 +263,73 @@ declare module '@tanstack/react-router' {
       preLoaderRoute: typeof DashboardRouteImport
       parentRoute: typeof rootRouteImport
     }
+    '/donations': {
+      id: '/donations'
+      path: '/donations'
+      fullPath: '/donations'
+      preLoaderRoute: typeof DonationsRouteImport
+      parentRoute: typeof rootRouteImport
+    }
+    '/inventory': {
+      id: '/inventory'
+      path: '/inventory'
+      fullPath: '/inventory'
+      preLoaderRoute: typeof InventoryRouteImport
+      parentRoute: typeof rootRouteImport
+    }
+    '/my-books': {
+      id: '/my-books'
+      path: '/my-books'
+      fullPath: '/my-books'
+      preLoaderRoute: typeof MyBooksRouteImport
+      parentRoute: typeof rootRouteImport
+    }
+    '/requests': {
+      id: '/requests'
+      path: '/requests'
+      fullPath: '/requests'
+      preLoaderRoute: typeof RequestsRouteImport
+      parentRoute: typeof rootRouteImport
+    }
+    '/staff': {
+      id: '/staff'
+      path: '/staff'
+      fullPath: '/staff'
+      preLoaderRoute: typeof StaffRouteImport
+      parentRoute: typeof rootRouteImport
+    }
+    '/students': {
+      id: '/students'
+      path: '/students'
+      fullPath: '/students'
+      preLoaderRoute: typeof StudentsRouteImport
+      parentRoute: typeof rootRouteImport
+    }
+    '/transfers': {
+      id: '/transfers'
+      path: '/transfers'
+      fullPath: '/transfers'
+      preLoaderRoute: typeof TransfersRouteImport
+      parentRoute: typeof rootRouteImport
+    }
   }
 }
 
 const rootRouteChildren: RootRouteChildren = {
   IndexRoute: IndexRoute,
+  AccountRoute: AccountRoute,
   AuthRoute: AuthRoute,
+  BooksRoute: BooksRoute,
+  CentersRoute: CentersRoute,
+  CirculationRoute: CirculationRoute,
   DashboardRoute: DashboardRoute,
+  DonationsRoute: DonationsRoute,
+  InventoryRoute: InventoryRoute,
+  MyBooksRoute: MyBooksRoute,
+  RequestsRoute: RequestsRoute,
+  StaffRoute: StaffRoute,
+  StudentsRoute: StudentsRoute,
+  TransfersRoute: TransfersRoute,
 }
 export const routeTree = rootRouteImport
   ._addFileChildren(rootRouteChildren)
