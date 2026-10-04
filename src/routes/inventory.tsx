@@ -8,7 +8,7 @@ import { pageHead } from "@/lib/seo";
 export const Route = createFileRoute("/inventory")({
   head: pageHead("Inventory", "Books held at each study center."),
   component: () => (
-    <AppShell roles={["MAIN_ADMIN", "SUB_ADMIN", "STUDY_CENTER"]}>
+    <AppShell roles={["STUDY_CENTER"]}>
       <Inventory />
     </AppShell>
   ),

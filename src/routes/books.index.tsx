@@ -7,7 +7,7 @@ import { PageHeader, Panel, Field, TextInput, Btn, Table, Td, Empty } from "@/co
 import { db, rpc, parseStickers } from "@/lib/db";
 import { pageHead } from "@/lib/seo";
 
-export const Route = createFileRoute("/books")({
+export const Route = createFileRoute("/books/")({
   head: pageHead("Book Catalog", "University book catalog with copy counts and sticker IDs."),
   component: () => (
     <AppShell roles={["MAIN_ADMIN", "SUB_ADMIN"]}>

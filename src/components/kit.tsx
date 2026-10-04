@@ -100,3 +100,42 @@ export function Table({ head, children }: { head: string[]; children: ReactNode 
 export function Td({ children, className }: { children?: ReactNode; className?: string }) {
   return <td className={cn("px-3 py-2.5 align-middle text-foreground", className)}>{children}</td>;
 }
+
+export type SortKey = "az" | "za" | "qty-asc" | "qty-desc";
+
+export function SortSelect({ value, onChange }: { value: SortKey; onChange: (v: SortKey) => void }) {
+  return (
+    <Select value={value} onChange={(e) => onChange(e.target.value as SortKey)} className="w-auto" aria-label="Sort">
+      <option value="az">Title A–Z</option>
+      <option value="za">Title Z–A</option>
+      <option value="qty-asc">Quantity: low to high</option>
+      <option value="qty-desc">Quantity: high to low</option>
+    </Select>
+  );
+}
+
+export function sortBooks<T>(list: T[], key: SortKey, name: (x: T) => string, qty: (x: T) => number): T[] {
+  return [...list].sort((a, b) => {
+    if (key === "az") return name(a).localeCompare(name(b));
+    if (key === "za") return name(b).localeCompare(name(a));
+    if (key === "qty-asc") return qty(a) - qty(b) || name(a).localeCompare(name(b));
+    return qty(b) - qty(a) || name(a).localeCompare(name(b));
+  });
+}
+
+export function Crumbs({ items }: { items: { label: string; to?: () => void }[] }) {
+  return (
+    <nav className="mb-3 flex flex-wrap items-center gap-1 text-sm text-muted-foreground" aria-label="Breadcrumb">
+      {items.map((it, i) => (
+        <span key={i} className="flex items-center gap-1">
+          {i > 0 && <span aria-hidden>›</span>}
+          {it.to ? (
+            <button onClick={it.to} className="hover:text-foreground hover:underline">{it.label}</button>
+          ) : (
+            <span className="font-medium text-foreground">{it.label}</span>
+          )}
+        </span>
+      ))}
+    </nav>
+  );
+}

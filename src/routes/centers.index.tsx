@@ -8,7 +8,7 @@ import { PageHeader, Panel, Field, TextInput, Btn, Table, Td, Empty } from "@/co
 import { db } from "@/lib/db";
 import { pageHead } from "@/lib/seo";
 
-export const Route = createFileRoute("/centers")({
+export const Route = createFileRoute("/centers/")({
   head: pageHead("Study Centers", "Manage study centers and their locations."),
   component: () => (
     <AppShell roles={["MAIN_ADMIN", "SUB_ADMIN"]}>

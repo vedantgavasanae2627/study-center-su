@@ -12,7 +12,7 @@ import { pageHead } from "@/lib/seo";
 export const Route = createFileRoute("/students")({
   head: pageHead("Students", "Register and manage students at your study center."),
   component: () => (
-    <AppShell roles={["MAIN_ADMIN", "SUB_ADMIN", "STUDY_CENTER"]}>
+    <AppShell roles={["STUDY_CENTER"]}>
       <Students />
     </AppShell>
   ),
