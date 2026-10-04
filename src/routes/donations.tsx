@@ -10,7 +10,7 @@ import { pageHead } from "@/lib/seo";
 export const Route = createFileRoute("/donations")({
   head: pageHead("Donations", "Record books donated by students and add them to the catalog."),
   component: () => (
-    <AppShell roles={["MAIN_ADMIN", "SUB_ADMIN", "STUDY_CENTER"]}>
+    <AppShell roles={["STUDY_CENTER"]}>
       <Donations />
     </AppShell>
   ),

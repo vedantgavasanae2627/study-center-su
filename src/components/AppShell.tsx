@@ -12,6 +12,7 @@ import { Select } from "@/components/kit";
 type NavItem = { to: string; label: string; icon: any; roles: AppRole[] };
 const ADMIN: AppRole[] = ["MAIN_ADMIN", "SUB_ADMIN"];
 const STAFF: AppRole[] = ["MAIN_ADMIN", "SUB_ADMIN", "STUDY_CENTER"];
+const CENTER: AppRole[] = ["STUDY_CENTER"];
 const ALL: AppRole[] = [...STAFF, "STUDENT"];
 
 const NAV: NavItem[] = [
@@ -19,12 +20,12 @@ const NAV: NavItem[] = [
   { to: "/centers", label: "Centers", icon: Building2, roles: ADMIN },
   { to: "/staff", label: "Staff", icon: UserCog, roles: ADMIN },
   { to: "/books", label: "Catalog", icon: Library, roles: ADMIN },
-  { to: "/students", label: "Students", icon: Users, roles: STAFF },
-  { to: "/circulation", label: "Issue & Return", icon: Repeat, roles: STAFF },
-  { to: "/inventory", label: "Inventory", icon: Boxes, roles: STAFF },
+  { to: "/students", label: "Students", icon: Users, roles: CENTER },
+  { to: "/circulation", label: "Issue & Return", icon: Repeat, roles: CENTER },
+  { to: "/inventory", label: "Inventory", icon: Boxes, roles: CENTER },
   { to: "/transfers", label: "Transfers", icon: ArrowLeftRight, roles: STAFF },
   { to: "/requests", label: "Requests", icon: Inbox, roles: STAFF },
-  { to: "/donations", label: "Donations", icon: Gift, roles: STAFF },
+  { to: "/donations", label: "Donations", icon: Gift, roles: CENTER },
   { to: "/my-books", label: "My Books", icon: BookMarked, roles: ["STUDENT"] },
   { to: "/account", label: "Account", icon: KeyRound, roles: ALL },
 ];
@@ -162,4 +163,11 @@ export function useCenterScope() {
     </Select>
   );
   return { centerId, center, picker, isAdmin: !locked };
+}
+
+export function useCenter(centerId: string) {
+  return useQuery({
+    queryKey: ["center", centerId],
+    queryFn: async () => (await db.from("study_centers").select("*").eq("id", centerId).maybeSingle()).data,
+  });
 }

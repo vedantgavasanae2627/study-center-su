@@ -1,14 +1,15 @@
 import { createFileRoute } from "@tanstack/react-router";
+import { useState } from "react";
 import { useQuery } from "@tanstack/react-query";
 import { AppShell, useCenterScope } from "@/components/AppShell";
-import { PageHeader, Panel, Table, Td, Tag, Empty } from "@/components/kit";
+import { PageHeader, Panel, Table, Td, Tag, Empty, TextInput, SortSelect, sortBooks, type SortKey } from "@/components/kit";
 import { db, fmtDate } from "@/lib/db";
 import { pageHead } from "@/lib/seo";
 
 export const Route = createFileRoute("/inventory")({
   head: pageHead("Inventory", "Books held at each study center."),
   component: () => (
-    <AppShell roles={["MAIN_ADMIN", "SUB_ADMIN", "STUDY_CENTER"]}>
+    <AppShell roles={["STUDY_CENTER"]}>
       <Inventory />
     </AppShell>
   ),
@@ -16,12 +17,15 @@ export const Route = createFileRoute("/inventory")({
 
 function Inventory() {
   const { centerId, picker } = useCenterScope();
+  const [sort, setSort] = useState<SortKey>("az");
+  const [search, setSearch] = useState("");
   const inv = useQuery({
     queryKey: ["inventory", centerId],
     enabled: !!centerId,
     queryFn: async () => (await db.from("center_inventory").select("*, master_books(title,author)").eq("center_id", centerId)).data ?? [],
   });
-  const list = [...(inv.data ?? [])].sort((a: any, b: any) => (a.master_books?.title ?? "").localeCompare(b.master_books?.title ?? ""));
+  const all = inv.data ?? [];
+  const list = sortBooks(all.filter((i: any) => `${i.master_books?.title} ${i.master_books?.author}`.toLowerCase().includes(search.toLowerCase())), sort, (i: any) => i.master_books?.title ?? "", (i: any) => i.total_allocated);
   const total = list.reduce((s: number, i: any) => s + i.total_allocated, 0);
   const out = list.reduce((s: number, i: any) => s + i.currently_borrowed, 0);
 
@@ -29,6 +33,10 @@ function Inventory() {
     <>
       <PageHeader title="Inventory" sub={`${list.length} titles · ${total} copies · ${out} on loan`} action={picker} />
       <Panel>
+        <div className="mb-4 flex flex-wrap gap-2">
+          <TextInput placeholder="Search…" value={search} onChange={(e) => setSearch(e.target.value)} className="min-w-0 flex-1" />
+          <SortSelect value={sort} onChange={setSort} />
+        </div>
         {list.length ? (
           <Table head={["Title", "Author", "Allocated", "Available", "On loan", "Last issued", ""]}>
             {list.map((i: any) => {

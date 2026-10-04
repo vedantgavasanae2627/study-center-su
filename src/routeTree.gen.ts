@@ -23,6 +23,13 @@ import { Route as RequestsRouteImport } from './routes/requests'
 import { Route as StaffRouteImport } from './routes/staff'
 import { Route as StudentsRouteImport } from './routes/students'
 import { Route as TransfersRouteImport } from './routes/transfers'
+import { Route as BooksIndexRouteImport } from './routes/books.index'
+import { Route as BooksBookIdRouteImport } from './routes/books.$bookId'
+import { Route as CentersIndexRouteImport } from './routes/centers.index'
+import { Route as CentersCenterIdRouteImport } from './routes/centers.$centerId'
+import { Route as CentersCenterIdIndexRouteImport } from './routes/centers.$centerId.index'
+import { Route as CentersCenterIdBooksBookIdRouteImport } from './routes/centers.$centerId.books.$bookId'
+import { Route as CentersCenterIdStudentsStudentIdRouteImport } from './routes/centers.$centerId.students.$studentId'
 
 const IndexRoute = IndexRouteImport.update({
   id: '/',
@@ -94,13 +101,50 @@ const TransfersRoute = TransfersRouteImport.update({
   path: '/transfers',
   getParentRoute: () => rootRouteImport,
 } as any)
+const BooksIndexRoute = BooksIndexRouteImport.update({
+  id: '/',
+  path: '/',
+  getParentRoute: () => BooksRoute,
+} as any)
+const BooksBookIdRoute = BooksBookIdRouteImport.update({
+  id: '/$bookId',
+  path: '/$bookId',
+  getParentRoute: () => BooksRoute,
+} as any)
+const CentersIndexRoute = CentersIndexRouteImport.update({
+  id: '/',
+  path: '/',
+  getParentRoute: () => CentersRoute,
+} as any)
+const CentersCenterIdRoute = CentersCenterIdRouteImport.update({
+  id: '/$centerId',
+  path: '/$centerId',
+  getParentRoute: () => CentersRoute,
+} as any)
+const CentersCenterIdIndexRoute = CentersCenterIdIndexRouteImport.update({
+  id: '/',
+  path: '/',
+  getParentRoute: () => CentersCenterIdRoute,
+} as any)
+const CentersCenterIdBooksBookIdRoute =
+  CentersCenterIdBooksBookIdRouteImport.update({
+    id: '/books/$bookId',
+    path: '/books/$bookId',
+    getParentRoute: () => CentersCenterIdRoute,
+  } as any)
+const CentersCenterIdStudentsStudentIdRoute =
+  CentersCenterIdStudentsStudentIdRouteImport.update({
+    id: '/students/$studentId',
+    path: '/students/$studentId',
+    getParentRoute: () => CentersCenterIdRoute,
+  } as any)
 
 export interface FileRoutesByFullPath {
   '/': typeof IndexRoute
   '/account': typeof AccountRoute
   '/auth': typeof AuthRoute
-  '/books': typeof BooksRoute
-  '/centers': typeof CentersRoute
+  '/books': typeof BooksRouteWithChildren
+  '/centers': typeof CentersRouteWithChildren
   '/circulation': typeof CirculationRoute
   '/dashboard': typeof DashboardRoute
   '/donations': typeof DonationsRoute
@@ -110,13 +154,18 @@ export interface FileRoutesByFullPath {
   '/staff': typeof StaffRoute
   '/students': typeof StudentsRoute
   '/transfers': typeof TransfersRoute
+  '/books/$bookId': typeof BooksBookIdRoute
+  '/centers/$centerId': typeof CentersCenterIdRouteWithChildren
+  '/books/': typeof BooksIndexRoute
+  '/centers/': typeof CentersIndexRoute
+  '/centers/$centerId/': typeof CentersCenterIdIndexRoute
+  '/centers/$centerId/books/$bookId': typeof CentersCenterIdBooksBookIdRoute
+  '/centers/$centerId/students/$studentId': typeof CentersCenterIdStudentsStudentIdRoute
 }
 export interface FileRoutesByTo {
   '/': typeof IndexRoute
   '/account': typeof AccountRoute
   '/auth': typeof AuthRoute
-  '/books': typeof BooksRoute
-  '/centers': typeof CentersRoute
   '/circulation': typeof CirculationRoute
   '/dashboard': typeof DashboardRoute
   '/donations': typeof DonationsRoute
@@ -126,14 +175,20 @@ export interface FileRoutesByTo {
   '/staff': typeof StaffRoute
   '/students': typeof StudentsRoute
   '/transfers': typeof TransfersRoute
+  '/books/$bookId': typeof BooksBookIdRoute
+  '/books': typeof BooksIndexRoute
+  '/centers': typeof CentersIndexRoute
+  '/centers/$centerId': typeof CentersCenterIdIndexRoute
+  '/centers/$centerId/books/$bookId': typeof CentersCenterIdBooksBookIdRoute
+  '/centers/$centerId/students/$studentId': typeof CentersCenterIdStudentsStudentIdRoute
 }
 export interface FileRoutesById {
   __root__: typeof rootRouteImport
   '/': typeof IndexRoute
   '/account': typeof AccountRoute
   '/auth': typeof AuthRoute
-  '/books': typeof BooksRoute
-  '/centers': typeof CentersRoute
+  '/books': typeof BooksRouteWithChildren
+  '/centers': typeof CentersRouteWithChildren
   '/circulation': typeof CirculationRoute
   '/dashboard': typeof DashboardRoute
   '/donations': typeof DonationsRoute
@@ -143,6 +198,13 @@ export interface FileRoutesById {
   '/staff': typeof StaffRoute
   '/students': typeof StudentsRoute
   '/transfers': typeof TransfersRoute
+  '/books/$bookId': typeof BooksBookIdRoute
+  '/centers/$centerId': typeof CentersCenterIdRouteWithChildren
+  '/books/': typeof BooksIndexRoute
+  '/centers/': typeof CentersIndexRoute
+  '/centers/$centerId/': typeof CentersCenterIdIndexRoute
+  '/centers/$centerId/books/$bookId': typeof CentersCenterIdBooksBookIdRoute
+  '/centers/$centerId/students/$studentId': typeof CentersCenterIdStudentsStudentIdRoute
 }
 export interface FileRouteTypes {
   fileRoutesByFullPath: FileRoutesByFullPath
@@ -161,13 +223,18 @@ export interface FileRouteTypes {
     | '/staff'
     | '/students'
     | '/transfers'
+    | '/books/$bookId'
+    | '/centers/$centerId'
+    | '/books/'
+    | '/centers/'
+    | '/centers/$centerId/'
+    | '/centers/$centerId/books/$bookId'
+    | '/centers/$centerId/students/$studentId'
   fileRoutesByTo: FileRoutesByTo
   to:
     | '/'
     | '/account'
     | '/auth'
-    | '/books'
-    | '/centers'
     | '/circulation'
     | '/dashboard'
     | '/donations'
@@ -177,6 +244,12 @@ export interface FileRouteTypes {
     | '/staff'
     | '/students'
     | '/transfers'
+    | '/books/$bookId'
+    | '/books'
+    | '/centers'
+    | '/centers/$centerId'
+    | '/centers/$centerId/books/$bookId'
+    | '/centers/$centerId/students/$studentId'
   id:
     | '__root__'
     | '/'
@@ -193,14 +266,21 @@ export interface FileRouteTypes {
     | '/staff'
     | '/students'
     | '/transfers'
+    | '/books/$bookId'
+    | '/centers/$centerId'
+    | '/books/'
+    | '/centers/'
+    | '/centers/$centerId/'
+    | '/centers/$centerId/books/$bookId'
+    | '/centers/$centerId/students/$studentId'
   fileRoutesById: FileRoutesById
 }
 export interface RootRouteChildren {
   IndexRoute: typeof IndexRoute
   AccountRoute: typeof AccountRoute
   AuthRoute: typeof AuthRoute
-  BooksRoute: typeof BooksRoute
-  CentersRoute: typeof CentersRoute
+  BooksRoute: typeof BooksRouteWithChildren
+  CentersRoute: typeof CentersRouteWithChildren
   CirculationRoute: typeof CirculationRoute
   DashboardRoute: typeof DashboardRoute
   DonationsRoute: typeof DonationsRoute
@@ -312,15 +392,105 @@ declare module '@tanstack/react-router' {
       preLoaderRoute: typeof TransfersRouteImport
       parentRoute: typeof rootRouteImport
     }
+    '/books/': {
+      id: '/books/'
+      path: '/'
+      fullPath: '/books/'
+      preLoaderRoute: typeof BooksIndexRouteImport
+      parentRoute: typeof BooksRoute
+    }
+    '/books/$bookId': {
+      id: '/books/$bookId'
+      path: '/$bookId'
+      fullPath: '/books/$bookId'
+      preLoaderRoute: typeof BooksBookIdRouteImport
+      parentRoute: typeof BooksRoute
+    }
+    '/centers/': {
+      id: '/centers/'
+      path: '/'
+      fullPath: '/centers/'
+      preLoaderRoute: typeof CentersIndexRouteImport
+      parentRoute: typeof CentersRoute
+    }
+    '/centers/$centerId': {
+      id: '/centers/$centerId'
+      path: '/$centerId'
+      fullPath: '/centers/$centerId'
+      preLoaderRoute: typeof CentersCenterIdRouteImport
+      parentRoute: typeof CentersRoute
+    }
+    '/centers/$centerId/': {
+      id: '/centers/$centerId/'
+      path: '/'
+      fullPath: '/centers/$centerId/'
+      preLoaderRoute: typeof CentersCenterIdIndexRouteImport
+      parentRoute: typeof CentersCenterIdRoute
+    }
+    '/centers/$centerId/books/$bookId': {
+      id: '/centers/$centerId/books/$bookId'
+      path: '/books/$bookId'
+      fullPath: '/centers/$centerId/books/$bookId'
+      preLoaderRoute: typeof CentersCenterIdBooksBookIdRouteImport
+      parentRoute: typeof CentersCenterIdRoute
+    }
+    '/centers/$centerId/students/$studentId': {
+      id: '/centers/$centerId/students/$studentId'
+      path: '/students/$studentId'
+      fullPath: '/centers/$centerId/students/$studentId'
+      preLoaderRoute: typeof CentersCenterIdStudentsStudentIdRouteImport
+      parentRoute: typeof CentersCenterIdRoute
+    }
   }
 }
+
+interface BooksRouteChildren {
+  BooksBookIdRoute: typeof BooksBookIdRoute
+  BooksIndexRoute: typeof BooksIndexRoute
+}
+
+const BooksRouteChildren: BooksRouteChildren = {
+  BooksBookIdRoute: BooksBookIdRoute,
+  BooksIndexRoute: BooksIndexRoute,
+}
+
+const BooksRouteWithChildren = BooksRoute._addFileChildren(BooksRouteChildren)
+
+interface CentersCenterIdRouteChildren {
+  CentersCenterIdIndexRoute: typeof CentersCenterIdIndexRoute
+  CentersCenterIdBooksBookIdRoute: typeof CentersCenterIdBooksBookIdRoute
+  CentersCenterIdStudentsStudentIdRoute: typeof CentersCenterIdStudentsStudentIdRoute
+}
+
+const CentersCenterIdRouteChildren: CentersCenterIdRouteChildren = {
+  CentersCenterIdIndexRoute: CentersCenterIdIndexRoute,
+  CentersCenterIdBooksBookIdRoute: CentersCenterIdBooksBookIdRoute,
+  CentersCenterIdStudentsStudentIdRoute: CentersCenterIdStudentsStudentIdRoute,
+}
+
+const CentersCenterIdRouteWithChildren = CentersCenterIdRoute._addFileChildren(
+  CentersCenterIdRouteChildren,
+)
+
+interface CentersRouteChildren {
+  CentersCenterIdRoute: typeof CentersCenterIdRouteWithChildren
+  CentersIndexRoute: typeof CentersIndexRoute
+}
+
+const CentersRouteChildren: CentersRouteChildren = {
+  CentersCenterIdRoute: CentersCenterIdRouteWithChildren,
+  CentersIndexRoute: CentersIndexRoute,
+}
+
+const CentersRouteWithChildren =
+  CentersRoute._addFileChildren(CentersRouteChildren)
 
 const rootRouteChildren: RootRouteChildren = {
   IndexRoute: IndexRoute,
   AccountRoute: AccountRoute,
   AuthRoute: AuthRoute,
-  BooksRoute: BooksRoute,
-  CentersRoute: CentersRoute,
+  BooksRoute: BooksRouteWithChildren,
+  CentersRoute: CentersRouteWithChildren,
   CirculationRoute: CirculationRoute,
   DashboardRoute: DashboardRoute,
   DonationsRoute: DonationsRoute,
