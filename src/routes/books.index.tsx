@@ -1,9 +1,9 @@
-import { createFileRoute } from "@tanstack/react-router";
+import { createFileRoute, useNavigate } from "@tanstack/react-router";
 import { useState } from "react";
 import { useQuery, useQueryClient } from "@tanstack/react-query";
 import { toast } from "sonner";
 import { AppShell } from "@/components/AppShell";
-import { PageHeader, Panel, Field, TextInput, Btn, Table, Td, Empty } from "@/components/kit";
+import { PageHeader, Panel, Field, TextInput, Btn, Table, Td, Empty, SortSelect, sortBooks, type SortKey } from "@/components/kit";
 import { db, rpc, parseStickers } from "@/lib/db";
 import { pageHead } from "@/lib/seo";
 
@@ -22,17 +22,21 @@ function Books() {
   const [author, setAuthor] = useState("");
   const [stickers, setStickers] = useState("");
   const [search, setSearch] = useState("");
-  const [open, setOpen] = useState<string | null>(null);
+  const [sort, setSort] = useState<SortKey>("az");
+  const nav = useNavigate();
 
   const books = useQuery({
     queryKey: ["catalog"],
     queryFn: async () => {
-      const [{ data: b }, { data: c }] = await Promise.all([
+      const [{ data: b }, { data: c }, { data: d }] = await Promise.all([
         db.from("master_books").select("*").order("title"),
         db.from("book_copies").select("id,book_id,sticker_id,status,study_centers(center_name),students(full_name)"),
+        db.from("book_donations").select("sticker_id"),
       ]);
+      // Donated books belong to their center only, not the university catalog
+      const donated = new Set((d ?? []).map((x: any) => x.sticker_id));
       return (b ?? []).map((book: any) => {
-        const copies = (c ?? []).filter((x: any) => x.book_id === book.id);
+        const copies = (c ?? []).filter((x: any) => x.book_id === book.id && !donated.has(x.sticker_id));
         return {
           ...book,
           copies,
@@ -41,7 +45,7 @@ function Books() {
           borrowed: copies.filter((x: any) => x.status === "BORROWED").length,
           transit: copies.filter((x: any) => x.status === "IN_TRANSIT").length,
         };
-      });
+      }).filter((book: any) => book.copies.length > 0);
     },
   });
 
@@ -56,7 +60,7 @@ function Books() {
     }
   }
 
-  const list = (books.data ?? []).filter((b: any) => `${b.title} ${b.author}`.toLowerCase().includes(search.toLowerCase()));
+  const list = sortBooks((books.data ?? []).filter((b: any) => `${b.title} ${b.author}`.toLowerCase().includes(search.toLowerCase())), sort, (b: any) => b.title, (b: any) => b.copies.length);
 
   return (
     <>
@@ -74,40 +78,26 @@ function Books() {
         <Btn onClick={add} className="mt-3">Add to catalog</Btn>
       </Panel>
       <Panel>
-        <TextInput placeholder="Search title or author…" value={search} onChange={(e) => setSearch(e.target.value)} className="mb-4" />
+        <div className="mb-4 flex flex-wrap gap-2">
+          <TextInput placeholder="Search title or author…" value={search} onChange={(e) => setSearch(e.target.value)} className="min-w-0 flex-1" />
+          <SortSelect value={sort} onChange={setSort} />
+        </div>
         {list.length ? (
           <Table head={["Title", "Author", "Total", "At university", "At centers", "On loan", "In transit"]}>
             {list.map((b: any) => (
-              <>
-                <tr key={b.id} className="cursor-pointer hover:bg-muted/50" onClick={() => setOpen(open === b.id ? null : b.id)}>
-                  <Td className="font-medium">{b.title}</Td>
-                  <Td>{b.author}</Td>
-                  <Td>{b.copies.length}</Td>
-                  <Td>{b.atUni}</Td>
-                  <Td>{b.atCenters}</Td>
-                  <Td>{b.borrowed}</Td>
-                  <Td>{b.transit}</Td>
-                </tr>
-                {open === b.id && (
-                  <tr key={b.id + "-c"}>
-                    <td colSpan={7} className="bg-muted/40 px-3 py-3">
-                      <div className="flex flex-wrap gap-2 text-xs">
-                        {b.copies.map((c: any) => (
-                          <span key={c.id} className="rounded border border-border bg-card px-2 py-1 text-foreground">
-                            <b>{c.sticker_id}</b> · {c.status.replaceAll("_", " ").toLowerCase()}
-                            {c.study_centers?.center_name ? ` · ${c.study_centers.center_name}` : ""}
-                            {c.students?.full_name ? ` · ${c.students.full_name}` : ""}
-                          </span>
-                        ))}
-                      </div>
-                    </td>
-                  </tr>
-                )}
-              </>
+              <tr key={b.id} className="cursor-pointer hover:bg-muted/50" onClick={() => nav({ to: "/books/$bookId", params: { bookId: b.id } })}>
+                <Td className="font-medium">{b.title}</Td>
+                <Td>{b.author}</Td>
+                <Td>{b.copies.length}</Td>
+                <Td>{b.atUni}</Td>
+                <Td>{b.atCenters}</Td>
+                <Td>{b.borrowed}</Td>
+                <Td>{b.transit}</Td>
+              </tr>
             ))}
           </Table>
         ) : <Empty>No books found.</Empty>}
-        <p className="mt-3 text-xs text-muted-foreground">Tap a book to see each copy's sticker and location.</p>
+        <p className="mt-3 text-xs text-muted-foreground">Tap a book to see its sticker IDs and where each copy is.</p>
       </Panel>
     </>
   );

@@ -1,10 +1,9 @@
 import { createFileRoute, useNavigate } from "@tanstack/react-router";
 import { useQuery } from "@tanstack/react-query";
-import { AppShell } from "@/components/AppShell";
+import { AppShell, useCenter } from "@/components/AppShell";
 import { PageHeader, Panel, Table, Td, Tag, Empty, Crumbs } from "@/components/kit";
 import { db, fmtDate } from "@/lib/db";
 import { pageHead } from "@/lib/seo";
-import { useCenter } from "./centers.$centerId.index";
 
 export const Route = createFileRoute("/centers/$centerId/books/$bookId")({
   head: pageHead("Center Book Copies", "Sticker IDs of a book at a study center and who holds each copy."),

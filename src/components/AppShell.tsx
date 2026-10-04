@@ -164,3 +164,10 @@ export function useCenterScope() {
   );
   return { centerId, center, picker, isAdmin: !locked };
 }
+
+export function useCenter(centerId: string) {
+  return useQuery({
+    queryKey: ["center", centerId],
+    queryFn: async () => (await db.from("study_centers").select("*").eq("id", centerId).maybeSingle()).data,
+  });
+}

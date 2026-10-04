@@ -1,7 +1,7 @@
 import { createFileRoute, useNavigate } from "@tanstack/react-router";
 import { useState } from "react";
 import { useQuery } from "@tanstack/react-query";
-import { AppShell } from "@/components/AppShell";
+import { AppShell, useCenter } from "@/components/AppShell";
 import { PageHeader, Panel, Table, Td, Tag, Empty, TextInput, SortSelect, sortBooks, Crumbs, type SortKey } from "@/components/kit";
 import { db, fmtDate } from "@/lib/db";
 import { pageHead } from "@/lib/seo";
@@ -18,12 +18,6 @@ export const Route = createFileRoute("/centers/$centerId/")({
 
 type Tab = "books" | "students" | "donations";
 
-export function useCenter(centerId: string) {
-  return useQuery({
-    queryKey: ["center", centerId],
-    queryFn: async () => (await db.from("study_centers").select("*").eq("id", centerId).maybeSingle()).data,
-  });
-}
 
 function CenterDetail() {
   const { centerId } = Route.useParams();
