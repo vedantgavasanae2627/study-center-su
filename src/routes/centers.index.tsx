@@ -1,4 +1,4 @@
-import { createFileRoute } from "@tanstack/react-router";
+import { createFileRoute, useNavigate } from "@tanstack/react-router";
 import { useState } from "react";
 import { useQuery, useQueryClient } from "@tanstack/react-query";
 import { toast } from "sonner";
@@ -19,6 +19,7 @@ export const Route = createFileRoute("/centers/")({
 
 function Centers() {
   const qc = useQueryClient();
+  const nav = useNavigate();
   const centers = useCenters();
   const [name, setName] = useState("");
   const [loc, setLoc] = useState("");
@@ -65,7 +66,7 @@ function Centers() {
           <Field label="Location"><TextInput value={loc} onChange={(e) => setLoc(e.target.value)} placeholder="Ichalkaranji" /></Field>
           <Btn onClick={add}>Add center</Btn>
         </div>
-        <p className="mt-3 text-xs text-muted-foreground">Create a login for the center's coordinator on the Staff page.</p>
+        <p className="mt-3 text-xs text-muted-foreground">Tap a center to see its books, students and donations. Create a login for the center's coordinator on the Staff page.</p>
       </Panel>
       <Panel>
         {centers.data?.length ? (
@@ -73,14 +74,14 @@ function Centers() {
             {centers.data.map((c) => {
               const k = counts.data?.[c.id];
               return (
-                <tr key={c.id}>
+                <tr key={c.id} className="cursor-pointer hover:bg-muted/50" onClick={() => nav({ to: "/centers/$centerId", params: { centerId: c.id } })}>
                   <Td className="font-medium">{c.center_name}</Td>
                   <Td>{c.location}</Td>
                   <Td>{k?.students ?? 0}</Td>
                   <Td>{k?.copies ?? 0}</Td>
                   <Td>{k?.out ?? 0}</Td>
                   <Td className="text-xs text-muted-foreground">{k?.logins.join(", ") || "—"}</Td>
-                  <Td><Btn variant="ghost" onClick={() => remove(c.id)} aria-label="Delete"><Trash2 className="h-4 w-4" /></Btn></Td>
+                  <Td><Btn variant="ghost" onClick={(e) => { e.stopPropagation(); void remove(c.id); }} aria-label="Delete"><Trash2 className="h-4 w-4" /></Btn></Td>
                 </tr>
               );
             })}
