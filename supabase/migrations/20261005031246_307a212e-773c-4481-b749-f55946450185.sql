@@ -1,0 +1,1 @@
+REVOKE EXECUTE ON FUNCTION public.accept_book_request(uuid,int,text) FROM PUBLIC, anon;
