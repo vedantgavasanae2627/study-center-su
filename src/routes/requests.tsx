@@ -38,6 +38,15 @@ function Requests() {
       refresh();
     }
   }
+  async function accept(r: any) {
+    const n = prompt(`How many copies to send to ${r.study_centers?.center_name}? (requested ${r.quantity_needed})`, String(r.quantity_needed));
+    if (!n) return;
+    const sent = await rpc<number>("accept_book_request", { p_request_id: r.id, p_quantity: Number(n), p_remarks: "" });
+    if (sent !== null) {
+      toast.success(`Accepted — ${sent} copies added to the center's stock`);
+      void qc.invalidateQueries();
+    }
+  }
   async function respond(id: string, status: "ACCEPTED" | "REJECTED") {
     const remarks = prompt(status === "ACCEPTED" ? "Remarks (optional)" : "Reason for rejecting") ?? "";
     if ((await rpc("respond_to_book_request", { p_request_id: id, p_status: status, p_remarks: remarks })) !== null) {
@@ -55,7 +64,7 @@ function Requests() {
     <>
       <PageHeader
         title="Book Requests"
-        sub={isAdmin ? "Review what centers need. After accepting, send copies from Transfers." : "Ask the university for more copies"}
+        sub={isAdmin ? "Review what centers need. Accepting sends the chosen number of copies straight to the center." : "Ask the university for more copies"}
         action={isAdmin && role === "MAIN_ADMIN" ? <Btn variant="outline" onClick={clearAll}>Clear all</Btn> : undefined}
       />
       {!isAdmin && (
@@ -86,7 +95,7 @@ function Requests() {
                 <Td>
                   {isAdmin && r.status === "SENT" && (
                     <div className="flex gap-1.5">
-                      <Btn onClick={() => respond(r.id, "ACCEPTED")}>Accept</Btn>
+                      <Btn onClick={() => accept(r)}>Accept</Btn>
                       <Btn variant="outline" onClick={() => respond(r.id, "REJECTED")}>Reject</Btn>
                     </div>
                   )}

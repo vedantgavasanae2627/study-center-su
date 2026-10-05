@@ -56,7 +56,7 @@ function Dashboard() {
 
   const overdue = useQuery({
     queryKey: ["dash-overdue", role, centerId, studentRecord?.id],
-    enabled: !!role,
+    enabled: role === "STUDY_CENTER" || role === "STUDENT",
     queryFn: async () => {
       let q = db
         .from("student_transactions")
@@ -88,7 +88,7 @@ function Dashboard() {
           </Link>
         ))}
       </div>
-      <Panel title="Overdue books" className="mt-6">
+      {(role === "STUDY_CENTER" || role === "STUDENT") && <Panel title="Overdue books" className="mt-6">
         {overdue.data?.length ? (
           <ul className="divide-y divide-border">
             {overdue.data.map((t) => (
@@ -106,7 +106,7 @@ function Dashboard() {
         ) : (
           <Empty>No overdue books. 🎉</Empty>
         )}
-      </Panel>
+      </Panel>}
     </>
   );
 }
