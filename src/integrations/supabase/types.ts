@@ -548,6 +548,14 @@ export type Database = {
         Args: { p_quantity: number; p_remarks: string; p_request_id: string }
         Returns: number
       }
+      accept_book_request_with_stickers: {
+        Args: {
+          p_remarks: string
+          p_request_id: string
+          p_sticker_ids: string[]
+        }
+        Returns: number
+      }
       accept_transfer: { Args: { p_transfer_id: string }; Returns: undefined }
       add_book_with_copies: {
         Args: { p_author: string; p_sticker_ids: string[]; p_title: string }
