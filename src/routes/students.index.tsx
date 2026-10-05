@@ -1,4 +1,4 @@
-import { createFileRoute } from "@tanstack/react-router";
+import { createFileRoute, useNavigate } from "@tanstack/react-router";
 import { useState } from "react";
 import { useQuery, useQueryClient } from "@tanstack/react-query";
 import { useServerFn } from "@tanstack/react-start";
@@ -9,7 +9,7 @@ import { db, rpc } from "@/lib/db";
 import { createAccount } from "@/lib/accounts.functions";
 import { pageHead } from "@/lib/seo";
 
-export const Route = createFileRoute("/students")({
+export const Route = createFileRoute("/students/")({
   head: pageHead("Students", "Register and manage students at your study center."),
   component: () => (
     <AppShell roles={["STUDY_CENTER"]}>
@@ -23,6 +23,7 @@ const blank = { prn: "", full_name: "", course: "BA", enrollment_year: String(ne
 
 function Students() {
   const qc = useQueryClient();
+  const nav = useNavigate();
   const { centerId, picker } = useCenterScope();
   const create = useServerFn(createAccount);
   const [f, setF] = useState(blank);
@@ -95,7 +96,7 @@ function Students() {
         {list.length ? (
           <Table head={["Student ID", "Name", "PRN", "Course", "Year", "Phone", "Books out", "Login"]}>
             {list.map((s: any) => (
-              <tr key={s.id}>
+              <tr key={s.id} className="cursor-pointer hover:bg-muted/50" onClick={() => nav({ to: "/students/$studentId", params: { studentId: s.id } })}>
                 <Td className="font-mono text-xs">{s.student_id}</Td>
                 <Td className="font-medium">{s.full_name}</Td>
                 <Td>{s.prn}</Td>
@@ -103,11 +104,12 @@ function Students() {
                 <Td>{s.year_of_study}</Td>
                 <Td>{s.phone ?? "—"}</Td>
                 <Td>{s.loans}</Td>
-                <Td>{s.user_id ? <Tag tone="green">Active</Tag> : <Btn variant="outline" onClick={() => makeLogin(s)}>Create login</Btn>}</Td>
+                <Td>{s.user_id ? <Tag tone="green">Active</Tag> : <Btn variant="outline" onClick={(e: any) => { e.stopPropagation(); makeLogin(s); }}>Create login</Btn>}</Td>
               </tr>
             ))}
           </Table>
         ) : <Empty>No students at this center yet.</Empty>}
+        {list.length > 0 && <p className="mt-3 text-xs text-muted-foreground">Tap a student for full details.</p>}
       </Panel>
     </>
   );

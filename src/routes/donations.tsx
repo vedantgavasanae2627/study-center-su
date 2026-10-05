@@ -4,11 +4,11 @@ import { useQuery, useQueryClient } from "@tanstack/react-query";
 import { toast } from "sonner";
 import { AppShell, useCenterScope } from "@/components/AppShell";
 import { PageHeader, Panel, Field, Select, TextInput, Btn, Table, Td, Tag, Empty } from "@/components/kit";
-import { db, rpc, fmtDate } from "@/lib/db";
+import { db, fmtDate } from "@/lib/db";
 import { pageHead } from "@/lib/seo";
 
 export const Route = createFileRoute("/donations")({
-  head: pageHead("Donations", "Record books donated by students and add them to the catalog."),
+  head: pageHead("Donations", "Record books donated by students kept separately from the main catalog."),
   component: () => (
     <AppShell roles={["STUDY_CENTER"]}>
       <Donations />
@@ -42,13 +42,6 @@ function Donations() {
     setF(blank);
     void qc.invalidateQueries({ queryKey: ["donations"] });
   }
-  async function catalog(id: string) {
-    if ((await rpc("add_donation_to_catalog", { p_donation_id: id })) !== null) {
-      toast.success("Added to catalog and center stock");
-      void qc.invalidateQueries();
-    }
-  }
-
   return (
     <>
       <PageHeader title="Donations" sub="Books donated by students" action={picker} />
@@ -66,7 +59,7 @@ function Donations() {
       </Panel>
       <Panel>
         {list.data?.length ? (
-          <Table head={["Date", "Book", "Sticker", "Donor", "Condition", "Status", ""]}>
+          <Table head={["Date", "Book", "Sticker", "Donor", "Condition", "Status"]}>
             {list.data.map((d: any) => (
               <tr key={d.id}>
                 <Td>{fmtDate(d.created_at)}</Td>
@@ -74,8 +67,7 @@ function Donations() {
                 <Td className="font-mono text-xs">{d.sticker_id}</Td>
                 <Td>{d.students?.full_name ?? (d.prn || "—")}</Td>
                 <Td>{d.condition}</Td>
-                <Td><Tag tone={d.status === "ADDED_TO_CATALOG" ? "green" : "amber"}>{d.status === "ADDED_TO_CATALOG" ? "In catalog" : "Donated"}</Tag></Td>
-                <Td>{d.status !== "ADDED_TO_CATALOG" && <Btn variant="outline" onClick={() => catalog(d.id)}>Add to catalog</Btn>}</Td>
+                <Td><Tag tone="green">Donated</Tag></Td>
               </tr>
             ))}
           </Table>
