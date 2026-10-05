@@ -21,12 +21,12 @@ import { Route as InventoryRouteImport } from './routes/inventory'
 import { Route as MyBooksRouteImport } from './routes/my-books'
 import { Route as RequestsRouteImport } from './routes/requests'
 import { Route as StaffRouteImport } from './routes/staff'
-import { Route as StudentsRouteImport } from './routes/students'
 import { Route as TransfersRouteImport } from './routes/transfers'
 import { Route as BooksIndexRouteImport } from './routes/books.index'
 import { Route as BooksBookIdRouteImport } from './routes/books.$bookId'
 import { Route as CentersIndexRouteImport } from './routes/centers.index'
 import { Route as CentersCenterIdRouteImport } from './routes/centers.$centerId'
+import { Route as StudentsIndexRouteImport } from './routes/students.index'
 import { Route as CentersCenterIdIndexRouteImport } from './routes/centers.$centerId.index'
 import { Route as CentersCenterIdBooksBookIdRouteImport } from './routes/centers.$centerId.books.$bookId'
 import { Route as CentersCenterIdStudentsStudentIdRouteImport } from './routes/centers.$centerId.students.$studentId'
@@ -91,11 +91,6 @@ const StaffRoute = StaffRouteImport.update({
   path: '/staff',
   getParentRoute: () => rootRouteImport,
 } as any)
-const StudentsRoute = StudentsRouteImport.update({
-  id: '/students',
-  path: '/students',
-  getParentRoute: () => rootRouteImport,
-} as any)
 const TransfersRoute = TransfersRouteImport.update({
   id: '/transfers',
   path: '/transfers',
@@ -120,6 +115,11 @@ const CentersCenterIdRoute = CentersCenterIdRouteImport.update({
   id: '/$centerId',
   path: '/$centerId',
   getParentRoute: () => CentersRoute,
+} as any)
+const StudentsIndexRoute = StudentsIndexRouteImport.update({
+  id: '/students/',
+  path: '/students/',
+  getParentRoute: () => rootRouteImport,
 } as any)
 const CentersCenterIdIndexRoute = CentersCenterIdIndexRouteImport.update({
   id: '/',
@@ -152,12 +152,12 @@ export interface FileRoutesByFullPath {
   '/my-books': typeof MyBooksRoute
   '/requests': typeof RequestsRoute
   '/staff': typeof StaffRoute
-  '/students': typeof StudentsRoute
   '/transfers': typeof TransfersRoute
   '/books/$bookId': typeof BooksBookIdRoute
   '/centers/$centerId': typeof CentersCenterIdRouteWithChildren
   '/books/': typeof BooksIndexRoute
   '/centers/': typeof CentersIndexRoute
+  '/students/': typeof StudentsIndexRoute
   '/centers/$centerId/': typeof CentersCenterIdIndexRoute
   '/centers/$centerId/books/$bookId': typeof CentersCenterIdBooksBookIdRoute
   '/centers/$centerId/students/$studentId': typeof CentersCenterIdStudentsStudentIdRoute
@@ -173,11 +173,11 @@ export interface FileRoutesByTo {
   '/my-books': typeof MyBooksRoute
   '/requests': typeof RequestsRoute
   '/staff': typeof StaffRoute
-  '/students': typeof StudentsRoute
   '/transfers': typeof TransfersRoute
   '/books/$bookId': typeof BooksBookIdRoute
   '/books': typeof BooksIndexRoute
   '/centers': typeof CentersIndexRoute
+  '/students': typeof StudentsIndexRoute
   '/centers/$centerId': typeof CentersCenterIdIndexRoute
   '/centers/$centerId/books/$bookId': typeof CentersCenterIdBooksBookIdRoute
   '/centers/$centerId/students/$studentId': typeof CentersCenterIdStudentsStudentIdRoute
@@ -196,12 +196,12 @@ export interface FileRoutesById {
   '/my-books': typeof MyBooksRoute
   '/requests': typeof RequestsRoute
   '/staff': typeof StaffRoute
-  '/students': typeof StudentsRoute
   '/transfers': typeof TransfersRoute
   '/books/$bookId': typeof BooksBookIdRoute
   '/centers/$centerId': typeof CentersCenterIdRouteWithChildren
   '/books/': typeof BooksIndexRoute
   '/centers/': typeof CentersIndexRoute
+  '/students/': typeof StudentsIndexRoute
   '/centers/$centerId/': typeof CentersCenterIdIndexRoute
   '/centers/$centerId/books/$bookId': typeof CentersCenterIdBooksBookIdRoute
   '/centers/$centerId/students/$studentId': typeof CentersCenterIdStudentsStudentIdRoute
@@ -221,12 +221,12 @@ export interface FileRouteTypes {
     | '/my-books'
     | '/requests'
     | '/staff'
-    | '/students'
     | '/transfers'
     | '/books/$bookId'
     | '/centers/$centerId'
     | '/books/'
     | '/centers/'
+    | '/students/'
     | '/centers/$centerId/'
     | '/centers/$centerId/books/$bookId'
     | '/centers/$centerId/students/$studentId'
@@ -242,11 +242,11 @@ export interface FileRouteTypes {
     | '/my-books'
     | '/requests'
     | '/staff'
-    | '/students'
     | '/transfers'
     | '/books/$bookId'
     | '/books'
     | '/centers'
+    | '/students'
     | '/centers/$centerId'
     | '/centers/$centerId/books/$bookId'
     | '/centers/$centerId/students/$studentId'
@@ -264,12 +264,12 @@ export interface FileRouteTypes {
     | '/my-books'
     | '/requests'
     | '/staff'
-    | '/students'
     | '/transfers'
     | '/books/$bookId'
     | '/centers/$centerId'
     | '/books/'
     | '/centers/'
+    | '/students/'
     | '/centers/$centerId/'
     | '/centers/$centerId/books/$bookId'
     | '/centers/$centerId/students/$studentId'
@@ -288,8 +288,8 @@ export interface RootRouteChildren {
   MyBooksRoute: typeof MyBooksRoute
   RequestsRoute: typeof RequestsRoute
   StaffRoute: typeof StaffRoute
-  StudentsRoute: typeof StudentsRoute
   TransfersRoute: typeof TransfersRoute
+  StudentsIndexRoute: typeof StudentsIndexRoute
 }
 
 declare module '@tanstack/react-router' {
@@ -378,13 +378,6 @@ declare module '@tanstack/react-router' {
       preLoaderRoute: typeof StaffRouteImport
       parentRoute: typeof rootRouteImport
     }
-    '/students': {
-      id: '/students'
-      path: '/students'
-      fullPath: '/students'
-      preLoaderRoute: typeof StudentsRouteImport
-      parentRoute: typeof rootRouteImport
-    }
     '/transfers': {
       id: '/transfers'
       path: '/transfers'
@@ -419,6 +412,13 @@ declare module '@tanstack/react-router' {
       fullPath: '/centers/$centerId'
       preLoaderRoute: typeof CentersCenterIdRouteImport
       parentRoute: typeof CentersRoute
+    }
+    '/students/': {
+      id: '/students/'
+      path: '/students'
+      fullPath: '/students/'
+      preLoaderRoute: typeof StudentsIndexRouteImport
+      parentRoute: typeof rootRouteImport
     }
     '/centers/$centerId/': {
       id: '/centers/$centerId/'
@@ -498,8 +498,8 @@ const rootRouteChildren: RootRouteChildren = {
   MyBooksRoute: MyBooksRoute,
   RequestsRoute: RequestsRoute,
   StaffRoute: StaffRoute,
-  StudentsRoute: StudentsRoute,
   TransfersRoute: TransfersRoute,
+  StudentsIndexRoute: StudentsIndexRoute,
 }
 export const routeTree = rootRouteImport
   ._addFileChildren(rootRouteChildren)
