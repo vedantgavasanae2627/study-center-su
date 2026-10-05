@@ -5,6 +5,8 @@ import { toast } from "sonner";
 import { AppShell } from "@/components/AppShell";
 import { PageHeader, Panel, Field, Select, TextInput, Btn, Table, Td, Tag, Empty } from "@/components/kit";
 import { db, rpc, fmtDate } from "@/lib/db";
+import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogDescription, DialogFooter } from "@/components/ui/dialog";
+import { cn } from "@/lib/utils";
 import { useAuth } from "@/lib/auth";
 import { pageHead } from "@/lib/seo";
 
@@ -38,22 +40,7 @@ function Requests() {
       refresh();
     }
   }
-  async function accept(r: any) {
-    const n = prompt(`How many copies to send to ${r.study_centers?.center_name}? (requested ${r.quantity_needed})`, String(r.quantity_needed));
-    if (!n) return;
-    const sent = await rpc<number>("accept_book_request", { p_request_id: r.id, p_quantity: Number(n), p_remarks: "" });
-    if (sent !== null) {
-      toast.success(`Accepted — ${sent} copies added to the center's stock`);
-      void qc.invalidateQueries();
-    }
-  }
-  async function respond(id: string, status: "ACCEPTED" | "REJECTED") {
-    const remarks = prompt(status === "ACCEPTED" ? "Remarks (optional)" : "Reason for rejecting") ?? "";
-    if ((await rpc("respond_to_book_request", { p_request_id: id, p_status: status, p_remarks: remarks })) !== null) {
-      toast.success(`Request ${status.toLowerCase()}`);
-      refresh();
-    }
-  }
+  const [active, setActive] = useState<{ r: any; mode: "accept" | "reject" } | null>(null);
   async function clearAll() {
     if (!confirm("Delete all requests?")) return;
     const n = await rpc<number>("delete_all_book_requests");
@@ -95,8 +82,8 @@ function Requests() {
                 <Td>
                   {isAdmin && r.status === "SENT" && (
                     <div className="flex gap-1.5">
-                      <Btn onClick={() => accept(r)}>Accept</Btn>
-                      <Btn variant="outline" onClick={() => respond(r.id, "REJECTED")}>Reject</Btn>
+                      <Btn onClick={() => setActive({ r, mode: "accept" })}>Accept</Btn>
+                      <Btn variant="outline" onClick={() => setActive({ r, mode: "reject" })}>Reject</Btn>
                     </div>
                   )}
                 </Td>
@@ -105,6 +92,78 @@ function Requests() {
           </Table>
         ) : <Empty>No requests.</Empty>}
       </Panel>
+      {active && <RespondDialog key={active.r.id} r={active.r} mode={active.mode} onClose={() => setActive(null)} onDone={() => { setActive(null); void qc.invalidateQueries(); }} />}
     </>
+  );
+}
+
+function RespondDialog({ r, mode, onClose, onDone }: { r: any; mode: "accept" | "reject"; onClose: () => void; onDone: () => void }) {
+  const [remarks, setRemarks] = useState("");
+  const [picked, setPicked] = useState<string[]>([]);
+  const [busy, setBusy] = useState(false);
+  const copies = useQuery({
+    queryKey: ["free-copies", r.book_id],
+    enabled: mode === "accept",
+    queryFn: async () =>
+      ((await db.from("book_copies").select("id,sticker_id").eq("book_id", r.book_id).eq("status", "AVAILABLE").is("current_center_id", null).order("sticker_id")).data ?? []) as { id: string; sticker_id: string }[],
+  });
+  const list = copies.data ?? [];
+  const toggle = (sid: string) => setPicked((p) => (p.includes(sid) ? p.filter((x) => x !== sid) : [...p, sid]));
+  const autoPick = () => setPicked(list.slice(0, r.quantity_needed).map((c) => c.sticker_id));
+
+  async function submit() {
+    setBusy(true);
+    if (mode === "accept") {
+      if (!picked.length) { toast.error("Select at least one copy"); setBusy(false); return; }
+      const n = await rpc<number>("accept_book_request_with_stickers", { p_request_id: r.id, p_sticker_ids: picked, p_remarks: remarks });
+      if (n !== null) { toast.success(`Accepted — ${n} copies added to ${r.study_centers?.center_name}`); onDone(); }
+    } else {
+      if (!remarks.trim()) { toast.error("Please give a reason"); setBusy(false); return; }
+      if ((await rpc("respond_to_book_request", { p_request_id: r.id, p_status: "REJECTED", p_remarks: remarks })) !== null) { toast.success("Request rejected"); onDone(); }
+    }
+    setBusy(false);
+  }
+
+  return (
+    <Dialog open onOpenChange={(o) => !o && onClose()}>
+      <DialogContent className="max-h-[90vh] overflow-y-auto sm:max-w-lg">
+        <DialogHeader>
+          <DialogTitle>{mode === "accept" ? "Accept request" : "Reject request"}</DialogTitle>
+          <DialogDescription>
+            {r.master_books?.title} · {r.study_centers?.center_name} · {r.quantity_needed} requested
+          </DialogDescription>
+        </DialogHeader>
+
+        {mode === "accept" && (
+          <div>
+            <div className="mb-2 flex items-center justify-between text-sm">
+              <span className="text-muted-foreground">Choose copies to send ({picked.length} selected, {list.length} at university)</span>
+              {list.length > 0 && <button onClick={autoPick} className="text-primary hover:underline">Pick {Math.min(r.quantity_needed, list.length)}</button>}
+            </div>
+            {copies.isLoading ? <p className="text-sm text-muted-foreground">Loading copies…</p> : list.length ? (
+              <div className="grid max-h-60 grid-cols-2 gap-2 overflow-y-auto sm:grid-cols-3">
+                {list.map((c) => (
+                  <button key={c.id} type="button" onClick={() => toggle(c.sticker_id)}
+                    className={cn("rounded-md border px-2 py-2 font-mono text-xs", picked.includes(c.sticker_id) ? "border-primary bg-primary text-primary-foreground" : "border-border text-foreground hover:border-primary")}>
+                    {c.sticker_id}
+                  </button>
+                ))}
+              </div>
+            ) : <Empty>No free copies at the university for this book.</Empty>}
+          </div>
+        )}
+
+        <Field label={mode === "accept" ? "Remarks (optional)" : "Reason for rejecting"}>
+          <TextInput value={remarks} onChange={(e) => setRemarks(e.target.value)} />
+        </Field>
+
+        <DialogFooter className="gap-2">
+          <Btn variant="outline" onClick={onClose}>Cancel</Btn>
+          <Btn variant={mode === "reject" ? "danger" : "primary"} onClick={submit} disabled={busy || (mode === "accept" && !picked.length)}>
+            {mode === "accept" ? `Send ${picked.length || ""} copies` : "Reject"}
+          </Btn>
+        </DialogFooter>
+      </DialogContent>
+    </Dialog>
   );
 }
