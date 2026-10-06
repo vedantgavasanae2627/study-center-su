@@ -20,17 +20,34 @@ export const Route = createFileRoute("/requests")({
 });
 
 function Requests() {
-  const { role } = useAuth();
+  const { role, staffProfile } = useAuth();
   const isAdmin = role !== "STUDY_CENTER";
+  const myCenter = staffProfile?.center_id ?? null;
   const qc = useQueryClient();
   const [bookId, setBookId] = useState("");
   const [qty, setQty] = useState("1");
   const books = useQuery({ queryKey: ["books-mini"], queryFn: async () => (await db.from("master_books").select("id,title").order("title")).data ?? [] });
   const reqs = useQuery({
-    queryKey: ["requests"],
-    queryFn: async () => (await db.from("book_requests").select("*, master_books(title), study_centers(center_name)").order("created_at", { ascending: false })).data ?? [],
+    queryKey: ["requests", isAdmin, myCenter],
+    enabled: isAdmin || !!myCenter,
+    queryFn: async () => {
+      let q = db.from("book_requests").select("*, master_books(title), study_centers(center_name), inventory_transfers(id,status)").order("created_at", { ascending: false });
+      if (!isAdmin) q = q.eq("center_id", myCenter);
+      return (await q).data ?? [];
+    },
   });
   const refresh = () => void qc.invalidateQueries({ queryKey: ["requests"] });
+  async function receive(transferId: string) {
+    if ((await rpc("accept_transfer", { p_transfer_id: transferId })) !== null) {
+      toast.success("Received — books added to your inventory");
+      void qc.invalidateQueries();
+    }
+  }
+  const stage = (r: any) => {
+    if (r.status !== "ACCEPTED") return { text: r.status.toLowerCase(), tone: r.status === "REJECTED" ? "red" : "amber", tr: null };
+    const tr = r.inventory_transfers?.[0];
+    return tr?.status === "RECEIVED" ? { text: "received", tone: "green", tr } : { text: "dispatched", tone: "amber", tr };
+  };
 
   async function send() {
     if (!bookId) { toast.error("Choose a book"); return; }
@@ -71,13 +88,15 @@ function Requests() {
       <Panel>
         {reqs.data?.length ? (
           <Table head={["Date", "Center", "Book", "Qty", "Status", "Remarks", ""]}>
-            {reqs.data.map((r: any) => (
+            {reqs.data.map((r: any) => {
+              const s = stage(r);
+              return (
               <tr key={r.id}>
                 <Td>{fmtDate(r.created_at)}</Td>
                 <Td>{r.study_centers?.center_name}</Td>
                 <Td className="font-medium">{r.master_books?.title}</Td>
                 <Td>{r.quantity_needed}</Td>
-                <Td><Tag tone={r.status === "ACCEPTED" ? "green" : r.status === "REJECTED" ? "red" : "amber"}>{r.status.toLowerCase()}</Tag></Td>
+                <Td><Tag tone={s.tone}>{s.text}</Tag></Td>
                 <Td className="text-muted-foreground">{r.admin_remarks || "—"}</Td>
                 <Td>
                   {isAdmin && r.status === "SENT" && (
@@ -86,9 +105,11 @@ function Requests() {
                       <Btn variant="outline" onClick={() => setActive({ r, mode: "reject" })}>Reject</Btn>
                     </div>
                   )}
+                  {!isAdmin && s.tr && s.tr.status === "DISPATCHED" && <Btn onClick={() => receive(s.tr.id)}>Received</Btn>}
                 </Td>
               </tr>
-            ))}
+              );
+            })}
           </Table>
         ) : <Empty>No requests.</Empty>}
       </Panel>

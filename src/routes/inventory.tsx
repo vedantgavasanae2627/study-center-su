@@ -1,4 +1,4 @@
-import { createFileRoute } from "@tanstack/react-router";
+import { createFileRoute, useNavigate } from "@tanstack/react-router";
 import { useState } from "react";
 import { useQuery } from "@tanstack/react-query";
 import { AppShell, useCenterScope } from "@/components/AppShell";
@@ -16,6 +16,7 @@ export const Route = createFileRoute("/inventory")({
 });
 
 function Inventory() {
+  const nav = useNavigate();
   const { centerId, picker } = useCenterScope();
   const [sort, setSort] = useState<SortKey>("az");
   const [search, setSearch] = useState("");
@@ -42,7 +43,7 @@ function Inventory() {
             {list.map((i: any) => {
               const idle = !i.last_issued_date || Date.now() - new Date(i.last_issued_date).getTime() > 90 * 864e5;
               return (
-                <tr key={i.id}>
+                <tr key={i.id} className="cursor-pointer hover:bg-muted/50" onClick={() => nav({ to: "/inventory/$bookId", params: { bookId: i.book_id } })}>
                   <Td className="font-medium">{i.master_books?.title}</Td>
                   <Td>{i.master_books?.author}</Td>
                   <Td>{i.total_allocated}</Td>
