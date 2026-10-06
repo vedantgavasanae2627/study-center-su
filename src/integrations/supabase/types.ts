@@ -278,6 +278,7 @@ export type Database = {
           from_center_id: string | null
           id: string
           quantity: number
+          request_id: string | null
           status: Database["public"]["Enums"]["transfer_status"]
           to_center_id: string
           transfer_type: Database["public"]["Enums"]["transfer_type"]
@@ -290,6 +291,7 @@ export type Database = {
           from_center_id?: string | null
           id?: string
           quantity: number
+          request_id?: string | null
           status?: Database["public"]["Enums"]["transfer_status"]
           to_center_id: string
           transfer_type?: Database["public"]["Enums"]["transfer_type"]
@@ -302,6 +304,7 @@ export type Database = {
           from_center_id?: string | null
           id?: string
           quantity?: number
+          request_id?: string | null
           status?: Database["public"]["Enums"]["transfer_status"]
           to_center_id?: string
           transfer_type?: Database["public"]["Enums"]["transfer_type"]
@@ -320,6 +323,13 @@ export type Database = {
             columns: ["from_center_id"]
             isOneToOne: false
             referencedRelation: "study_centers"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "inventory_transfers_request_id_fkey"
+            columns: ["request_id"]
+            isOneToOne: false
+            referencedRelation: "book_requests"
             referencedColumns: ["id"]
           },
           {
@@ -590,12 +600,16 @@ export type Database = {
         Args: {
           p_book_id: string
           p_from_center_id: string
-          p_sticker_ids: string[]
+          p_quantity: number
           p_to_center_id: string
         }
         Returns: string
       }
       delete_all_book_requests: { Args: never; Returns: number }
+      dispatch_transfer: {
+        Args: { p_sticker_ids: string[]; p_transfer_id: string }
+        Returns: number
+      }
       has_role: {
         Args: {
           _role: Database["public"]["Enums"]["app_role"]
