@@ -114,6 +114,52 @@ export type Database = {
           },
         ]
       }
+      book_demands: {
+        Row: {
+          book_id: string
+          center_id: string
+          created_at: string
+          id: string
+          student_id: string
+        }
+        Insert: {
+          book_id: string
+          center_id: string
+          created_at?: string
+          id?: string
+          student_id: string
+        }
+        Update: {
+          book_id?: string
+          center_id?: string
+          created_at?: string
+          id?: string
+          student_id?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "book_demands_book_id_fkey"
+            columns: ["book_id"]
+            isOneToOne: false
+            referencedRelation: "master_books"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "book_demands_center_id_fkey"
+            columns: ["center_id"]
+            isOneToOne: false
+            referencedRelation: "study_centers"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "book_demands_student_id_fkey"
+            columns: ["student_id"]
+            isOneToOne: false
+            referencedRelation: "students"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
       book_donations: {
         Row: {
           author: string
@@ -606,6 +652,12 @@ export type Database = {
         Returns: string
       }
       delete_all_book_requests: { Args: never; Returns: number }
+      delete_book_copies: {
+        Args: { p_book_id: string; p_sticker_ids: string[] }
+        Returns: number
+      }
+      delete_center: { Args: { p_center_id: string }; Returns: string[] }
+      delete_student: { Args: { p_student_id: string }; Returns: string }
       dispatch_transfer: {
         Args: { p_sticker_ids: string[]; p_transfer_id: string }
         Returns: number
@@ -631,6 +683,7 @@ export type Database = {
       my_center_id: { Args: { _user_id: string }; Returns: string }
       my_student_id: { Args: { _user_id: string }; Returns: string }
       renew_book: { Args: { p_transaction_id: string }; Returns: string }
+      request_book_demand: { Args: { p_book_id: string }; Returns: string }
       respond_to_book_request: {
         Args: { p_remarks: string; p_request_id: string; p_status: string }
         Returns: undefined
