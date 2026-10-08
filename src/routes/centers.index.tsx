@@ -7,6 +7,8 @@ import { AppShell, useCenters } from "@/components/AppShell";
 import { PageHeader, Panel, Field, TextInput, Btn, Table, Td, Empty } from "@/components/kit";
 import { db } from "@/lib/db";
 import { pageHead } from "@/lib/seo";
+import { useServerFn } from "@tanstack/react-start";
+import { deleteCenter } from "@/lib/accounts.functions";
 
 export const Route = createFileRoute("/centers/")({
   head: pageHead("Study Centers", "Manage study centers and their locations."),
@@ -49,12 +51,13 @@ function Centers() {
     void qc.invalidateQueries({ queryKey: ["centers"] });
   }
 
+  const delCenter = useServerFn(deleteCenter);
   async function remove(id: string) {
-    if (!confirm("Delete this center? Only possible if it has no students.")) return;
-    const { error } = await db.from("study_centers").delete().eq("id", id);
-    if (error) { toast.error("Can't delete: center still has students or history"); return; }
-    toast.success("Center deleted");
-    void qc.invalidateQueries({ queryKey: ["centers"] });
+    const k = counts.data?.[id];
+    if (!confirm(`Delete this center? All its ${k?.copies ?? 0} book copies go back to the university. Its ${k?.students ?? 0} students, coordinator logins and history will be removed.`)) return;
+    try { await delCenter({ data: { centerId: id } }); toast.success("Center deleted, books returned to university"); }
+    catch (e: any) { toast.error(e.message); return; }
+    void qc.invalidateQueries();
   }
 
   return (

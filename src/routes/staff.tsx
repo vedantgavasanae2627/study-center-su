@@ -7,7 +7,7 @@ import { AppShell, useCenters, roleLabels } from "@/components/AppShell";
 import { PageHeader, Panel, Field, TextInput, Select, Btn, Table, Td, Tag, Empty } from "@/components/kit";
 import { db } from "@/lib/db";
 import { useAuth } from "@/lib/auth";
-import { createAccount, resetUserPassword } from "@/lib/accounts.functions";
+import { createAccount, resetUserPassword, deleteStaff } from "@/lib/accounts.functions";
 import { pageHead } from "@/lib/seo";
 
 export const Route = createFileRoute("/staff")({
@@ -25,6 +25,12 @@ function Staff() {
   const centers = useCenters();
   const create = useServerFn(createAccount);
   const reset = useServerFn(resetUserPassword);
+  const delStaff = useServerFn(deleteStaff);
+  async function remove(u: any) {
+    if (!confirm(`Delete the login for ${u.full_name}?`)) return;
+    try { await delStaff({ data: { userId: u.id } }); toast.success("Login deleted"); void qc.invalidateQueries({ queryKey: ["staff"] }); }
+    catch (e: any) { toast.error(e.message); }
+  }
   const [form, setForm] = useState({ fullName: "", email: "", password: "", role: "STUDY_CENTER", centerId: "" });
   const [busy, setBusy] = useState(false);
 
@@ -101,7 +107,7 @@ function Staff() {
                 <Td>{u.username_or_email}</Td>
                 <Td><Tag tone={u.role === "STUDY_CENTER" ? "amber" : "green"}>{u.role ? roleLabels[u.role as keyof typeof roleLabels] : "—"}</Tag></Td>
                 <Td>{u.study_centers?.center_name ?? "—"}</Td>
-                <Td>{u.role !== "MAIN_ADMIN" && <Btn variant="outline" onClick={() => doReset(u.id)}>Reset password</Btn>}</Td>
+                <Td>{u.role !== "MAIN_ADMIN" && <div className="flex gap-2"><Btn variant="outline" onClick={() => doReset(u.id)}>Reset password</Btn>{(u.role === "STUDY_CENTER" || role === "MAIN_ADMIN") && <Btn variant="danger" onClick={() => remove(u)}>Delete</Btn>}</div>}</Td>
               </tr>
             ))}
           </Table>
