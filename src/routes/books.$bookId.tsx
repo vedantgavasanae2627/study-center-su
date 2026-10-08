@@ -1,8 +1,11 @@
 import { createFileRoute, useNavigate } from "@tanstack/react-router";
 import { useState } from "react";
-import { useQuery } from "@tanstack/react-query";
+import { useQuery, useQueryClient } from "@tanstack/react-query";
+import { toast } from "sonner";
+import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogDescription } from "@/components/ui/dialog";
+import { rpc } from "@/lib/db";
 import { AppShell } from "@/components/AppShell";
-import { PageHeader, Panel, Table, Td, Tag, Empty, Crumbs, Select } from "@/components/kit";
+import { PageHeader, Panel, Table, Td, Tag, Empty, Crumbs, Select, Btn } from "@/components/kit";
 import { db } from "@/lib/db";
 import { pageHead } from "@/lib/seo";
 
@@ -32,6 +35,19 @@ function BookCopies() {
       return { book, copies: copies ?? [] };
     },
   });
+  const qc = useQueryClient();
+  const [open, setOpen] = useState(false);
+  const [pick, setPick] = useState<string[]>([]);
+  const atUni = (q.data?.copies ?? []).filter((c: any) => c.status === "AVAILABLE" && !c.study_centers);
+  async function doDelete() {
+    if (!pick.length) { toast.error("Select at least one sticker ID"); return; }
+    const n = await rpc<number>("delete_book_copies", { p_book_id: bookId, p_sticker_ids: pick });
+    if (n === null) return;
+    toast.success(`Deleted ${n} copies`);
+    setOpen(false); setPick([]);
+    void qc.invalidateQueries();
+    if (pick.length === (q.data?.copies.length ?? 0)) nav({ to: "/books" });
+  }
   const copies = (q.data?.copies ?? []).filter((c: any) => !filter || c.status === filter);
   const title = q.data?.book?.title ?? "Book";
 
@@ -41,13 +57,41 @@ function BookCopies() {
       <PageHeader
         title={title}
         sub={`${q.data?.book?.author ?? ""} · ${q.data?.copies.length ?? 0} copies`}
-        action={
+        action={<div className="flex gap-2">
+          <Btn variant="danger" onClick={() => { setPick([]); setOpen(true); }}>Delete copies</Btn>
           <Select value={filter} onChange={(e) => setFilter(e.target.value)} className="w-auto">
             <option value="">All copies</option>
             {Object.entries(label).map(([k, v]) => <option key={k} value={k}>{v}</option>)}
-          </Select>
+          </Select></div>
         }
       />
+      <Dialog open={open} onOpenChange={setOpen}>
+        <DialogContent className="max-w-md">
+          <DialogHeader>
+            <DialogTitle>Delete copies of {title}</DialogTitle>
+            <DialogDescription>Only copies at the university can be deleted. Copies at centers or on loan are not listed.</DialogDescription>
+          </DialogHeader>
+          {atUni.length ? (
+            <>
+              <div className="flex justify-between text-sm">
+                <span className="text-muted-foreground">{pick.length} of {atUni.length} selected</span>
+                <button className="font-medium text-primary" onClick={() => setPick(pick.length === atUni.length ? [] : atUni.map((c: any) => c.sticker_id))}>{pick.length === atUni.length ? "Clear" : "Select all"}</button>
+              </div>
+              <div className="flex max-h-64 flex-wrap gap-2 overflow-y-auto">
+                {atUni.map((c: any) => {
+                  const on = pick.includes(c.sticker_id);
+                  return <button key={c.id} onClick={() => setPick(on ? pick.filter((x) => x !== c.sticker_id) : [...pick, c.sticker_id])}
+                    className={`rounded-md border px-2.5 py-1 font-mono text-xs ${on ? "border-destructive bg-destructive text-destructive-foreground" : "border-border bg-card text-foreground"}`}>{c.sticker_id}</button>;
+                })}
+              </div>
+              <div className="flex justify-end gap-2">
+                <Btn variant="outline" onClick={() => setOpen(false)}>Cancel</Btn>
+                <Btn variant="danger" onClick={doDelete} disabled={!pick.length}>Delete {pick.length || ""}</Btn>
+              </div>
+            </>
+          ) : <Empty>No copies at the university. Copies at centers can't be deleted.</Empty>}
+        </DialogContent>
+      </Dialog>
       <Panel title="Sticker IDs and allocation">
         {copies.length ? (
           <Table head={["Sticker ID", "Status", "Center", "Issued to"]}>

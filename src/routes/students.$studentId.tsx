@@ -1,7 +1,10 @@
 import { createFileRoute, useNavigate } from "@tanstack/react-router";
 import { useQuery } from "@tanstack/react-query";
 import { AppShell, useCenter } from "@/components/AppShell";
-import { PageHeader, Panel, Table, Td, Tag, Empty, Crumbs } from "@/components/kit";
+import { PageHeader, Panel, Table, Td, Tag, Empty, Crumbs, Btn } from "@/components/kit";
+import { useServerFn } from "@tanstack/react-start";
+import { toast } from "sonner";
+import { deleteStudent } from "@/lib/accounts.functions";
 import { db, fmtDate, overdueFine } from "@/lib/db";
 import { pageHead } from "@/lib/seo";
 import { useAuth } from "@/lib/auth";
@@ -31,6 +34,13 @@ function StudentDetail() {
       return { s, tx: tx ?? [] };
     },
   });
+  const del = useServerFn(deleteStudent);
+  async function remove() {
+    const active = (q.data?.tx ?? []).filter((t: any) => t.status !== "RETURNED").length;
+    if (!confirm(`Delete ${s?.full_name}? ${active ? `${active} issued book(s) will go back to the center shelf. ` : ""}Their login and history will be removed.`)) return;
+    try { await del({ data: { studentId } }); toast.success("Student deleted"); nav({ to: "/students" }); }
+    catch (e: any) { toast.error(e.message); }
+  }
   const s = q.data?.s;
   const cname = center.data?.center_name ?? "Center";
   const info: [string, any][] = s ? [
@@ -45,7 +55,7 @@ function StudentDetail() {
         { label: "Students", to: () => nav({ to: "/students" }) },
         { label: s?.full_name ?? "Student" },
       ]} />
-      <PageHeader title={s?.full_name ?? "Student"} sub={cname} />
+      <PageHeader title={s?.full_name ?? "Student"} sub={cname} action={s && <Btn variant="danger" onClick={remove}>Delete student</Btn>} />
       <Panel title="Student information" className="mb-6">
         <dl className="grid grid-cols-2 gap-x-4 gap-y-3 sm:grid-cols-3">
           {info.map(([k, v]) => (
