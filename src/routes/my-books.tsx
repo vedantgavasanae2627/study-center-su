@@ -1,9 +1,10 @@
 import { createFileRoute } from "@tanstack/react-router";
 import { useState } from "react";
-import { useQuery } from "@tanstack/react-query";
+import { useQuery, useQueryClient } from "@tanstack/react-query";
+import { toast } from "sonner";
 import { AppShell } from "@/components/AppShell";
-import { PageHeader, Panel, Tag, Empty, TextInput } from "@/components/kit";
-import { db, fmtDate, overdueFine } from "@/lib/db";
+import { PageHeader, Panel, Tag, Empty, TextInput, Btn } from "@/components/kit";
+import { rpc, db, fmtDate, overdueFine } from "@/lib/db";
 import { useAuth } from "@/lib/auth";
 import { pageHead } from "@/lib/seo";
 
@@ -31,6 +32,25 @@ function MyBooks() {
       (await db.from("center_inventory").select("id,currently_available,total_allocated,master_books(title,author)").eq("center_id", studentRecord!.center_id)).data ?? [],
   });
   const [search, setSearch] = useState("");
+  const qc = useQueryClient();
+  const catalog = useQuery({
+    queryKey: ["my-catalog", studentRecord?.id],
+    enabled: !!studentRecord,
+    queryFn: async () => {
+      const [{ data: b }, { data: d }] = await Promise.all([
+        db.from("master_books").select("id,title,author").order("title"),
+        db.from("book_demands").select("book_id").eq("student_id", studentRecord!.id),
+      ]);
+      return { books: b ?? [], asked: new Set((d ?? []).map((x: any) => x.book_id)) };
+    },
+  });
+  const atCenter = new Set((stock.data ?? []).filter((i: any) => i.total_allocated > 0).map((i: any) => i.master_books?.title));
+  const missing = search.trim().length < 2 ? [] : (catalog.data?.books ?? [])
+    .filter((b: any) => !atCenter.has(b.title) && `${b.title} ${b.author}`.toLowerCase().includes(search.toLowerCase()));
+  async function demand(bookId: string) {
+    const r = await rpc("request_book_demand", { p_book_id: bookId });
+    if (r) { toast.success("Request sent to the university"); void qc.invalidateQueries({ queryKey: ["my-catalog"] }); }
+  }
   const avail = (stock.data ?? [])
     .filter((i: any) => `${i.master_books?.title} ${i.master_books?.author}`.toLowerCase().includes(search.toLowerCase()))
     .sort((a: any, b: any) => (a.master_books?.title ?? "").localeCompare(b.master_books?.title ?? ""));
@@ -73,6 +93,19 @@ function MyBooks() {
             ))}
           </ul>
         ) : <Empty>No books found at your center.</Empty>}
+        {missing.length > 0 && (
+          <div className="mt-4 border-t border-border pt-3">
+            <p className="mb-2 text-xs font-medium text-muted-foreground">Not at your center — request it from the university</p>
+            <ul className="divide-y divide-border text-sm">
+              {missing.map((b: any) => (
+                <li key={b.id} className="flex items-center justify-between gap-2 py-2.5">
+                  <span><span className="font-medium text-foreground">{b.title}</span><span className="block text-xs text-muted-foreground">{b.author}</span></span>
+                  {catalog.data?.asked.has(b.id) ? <Tag tone="amber">Requested</Tag> : <Btn variant="outline" onClick={() => demand(b.id)}>Request</Btn>}
+                </li>
+              ))}
+            </ul>
+          </div>
+        )}
       </Panel>
       <Panel title="History">
         {past.length ? (

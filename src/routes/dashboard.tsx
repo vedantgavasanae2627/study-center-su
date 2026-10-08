@@ -71,6 +71,29 @@ function Dashboard() {
     },
   });
 
+  const isAdmin = role === "MAIN_ADMIN" || role === "SUB_ADMIN";
+  const suggest = useQuery({
+    queryKey: ["dash-suggest"],
+    enabled: isAdmin,
+    queryFn: async () => {
+      const [{ data: dm }, { data: inv }, { data: uni }] = await Promise.all([
+        db.from("book_demands").select("book_id,center_id,master_books(title),study_centers(center_name)"),
+        db.from("center_inventory").select("book_id,center_id,currently_available,currently_borrowed,study_centers(center_name)"),
+        db.from("book_copies").select("book_id").eq("status", "AVAILABLE").is("current_center_id", null),
+      ]);
+      const g: Record<string, any> = {};
+      (dm ?? []).forEach((d: any) => {
+        const k = d.book_id + d.center_id;
+        (g[k] ??= { ...d, count: 0 }).count++;
+      });
+      return Object.values(g).sort((a: any, b: any) => b.count - a.count).map((d: any) => {
+        const has = new Set((inv ?? []).filter((i: any) => i.center_id === d.center_id && i.book_id === d.book_id).map(() => 1));
+        const idle = (inv ?? []).filter((i: any) => i.book_id === d.book_id && i.center_id !== d.center_id && i.currently_available > 0 && i.currently_borrowed === 0);
+        const atUni = (uni ?? []).filter((c: any) => c.book_id === d.book_id).length;
+        return { ...d, idle, atUni, fulfilled: has.size > 0 };
+      }).filter((d: any) => !d.fulfilled);
+    },
+  });
   const name = role === "STUDENT" ? studentRecord?.full_name : staffProfile?.full_name;
 
   return (
@@ -88,6 +111,26 @@ function Dashboard() {
           </Link>
         ))}
       </div>
+      {isAdmin && <Panel title="Student demand & transfer suggestions" className="mt-6">
+        {suggest.data?.length ? (
+          <ul className="divide-y divide-border">
+            {suggest.data.map((d: any) => (
+              <li key={d.book_id + d.center_id} className="py-2.5 text-sm">
+                <div className="flex flex-wrap items-center justify-between gap-2">
+                  <p className="font-medium text-foreground">{d.master_books?.title} <span className="text-muted-foreground">→ {d.study_centers?.center_name}</span></p>
+                  <Tag tone="amber">{d.count} student{d.count > 1 ? "s" : ""} asked</Tag>
+                </div>
+                <p className="mt-1 text-muted-foreground">
+                  {d.idle.length
+                    ? <>Idle at {d.idle.map((i: any) => `${i.study_centers?.center_name} (${i.currently_available})`).join(", ")} — relocate from there.</>
+                    : d.atUni ? <>{d.atUni} copies free at the university — restock.</> : <>No free copies anywhere — consider buying more.</>}
+                </p>
+              </li>
+            ))}
+          </ul>
+        ) : <Empty>No open student requests.</Empty>}
+        <Link to="/transfers" className="mt-3 inline-block text-sm font-medium text-primary">Go to Transfers →</Link>
+      </Panel>}
       {(role === "STUDY_CENTER" || role === "STUDENT") && <Panel title="Overdue books" className="mt-6">
         {overdue.data?.length ? (
           <ul className="divide-y divide-border">
