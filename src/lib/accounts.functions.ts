@@ -76,3 +76,52 @@ export const resetUserPassword = createServerFn({ method: "POST" })
     if (error) throw new Error(error.message);
     return { ok: true };
   });
+
+async function dropAuthUsers(ids: (string | null | undefined)[]) {
+  const { supabaseAdmin } = await import("@/integrations/supabase/client.server");
+  const admin = supabaseAdmin as any;
+  for (const id of ids.filter(Boolean) as string[]) {
+    await admin.from("user_roles").delete().eq("user_id", id);
+    await admin.auth.admin.deleteUser(id);
+  }
+}
+
+export const deleteStudent = createServerFn({ method: "POST" })
+  .middleware([requireSupabaseAuth])
+  .inputValidator((d) => z.object({ studentId: z.string().uuid() }).parse(d))
+  .handler(async ({ data, context }) => {
+    const { data: uid, error } = await (context.supabase as any).rpc("delete_student", { p_student_id: data.studentId });
+    if (error) throw new Error(error.message);
+    await dropAuthUsers([uid]);
+    return { ok: true };
+  });
+
+export const deleteCenter = createServerFn({ method: "POST" })
+  .middleware([requireSupabaseAuth])
+  .inputValidator((d) => z.object({ centerId: z.string().uuid() }).parse(d))
+  .handler(async ({ data, context }) => {
+    const { data: uids, error } = await (context.supabase as any).rpc("delete_center", { p_center_id: data.centerId });
+    if (error) throw new Error(error.message);
+    await dropAuthUsers(uids ?? []);
+    return { ok: true };
+  });
+
+export const deleteStaff = createServerFn({ method: "POST" })
+  .middleware([requireSupabaseAuth])
+  .inputValidator((d) => z.object({ userId: z.string().uuid() }).parse(d))
+  .handler(async ({ data, context }) => {
+    const sb = context.supabase as any;
+    const { data: roles } = await sb.from("user_roles").select("role").eq("user_id", context.userId);
+    const mine = (roles ?? []).map((r: any) => r.role as string);
+    const isMain = mine.includes("MAIN_ADMIN");
+    if (!isMain && !mine.includes("SUB_ADMIN")) throw new Error("Only admins can delete logins");
+    if (data.userId === context.userId) throw new Error("You can't delete yourself");
+    const { supabaseAdmin } = await import("@/integrations/supabase/client.server");
+    const { data: target } = await (supabaseAdmin as any).from("user_roles").select("role").eq("user_id", data.userId);
+    const t = (target ?? []).map((r: any) => r.role as string);
+    if (t.includes("MAIN_ADMIN")) throw new Error("The Main Admin can't be deleted");
+    if (t.includes("SUB_ADMIN") && !isMain) throw new Error("Only the Main Admin can delete sub admins");
+    await (supabaseAdmin as any).from("app_users").delete().eq("id", data.userId);
+    await dropAuthUsers([data.userId]);
+    return { ok: true };
+  });
